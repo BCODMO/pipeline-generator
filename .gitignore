@@ -102,3 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# test files
+tests/data
+
+# dpp files
+.dpp
