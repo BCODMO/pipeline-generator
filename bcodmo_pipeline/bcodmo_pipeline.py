@@ -1,4 +1,6 @@
+import io
 import logging
+import yaml
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -6,26 +8,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class BcodmoPipeline:
-    def __init__(self, name, title, description):
-        name.replace(' ', '-')
-        self.intro = f'''{name}:
-  title: {title}
-  description: {description}
-  pipeline:'''
-        self._steps = []
-        self._resources = []
+    def __init__(self, *args, **kwargs):
+        if 'pipeline_spec' in kwargs:
+            self.name, self.title, \
+                self.description, self._steps, self._resources \
+                = self._parse_pipeline_spec(kwargs['pipeline_spec'])
+        else:
+            self.name = kwargs['name']
+            self.title = kwargs['title']
+            self.description = kwargs['description']
+            self._steps = []
+            self._resources = []
 
     def save_to_file(self, file_path):
         with open(file_path, 'w') as fd:
-            num_chars = fd.write(self.intro + ''.join(self.get_steps()))
-
-    def get_steps(self):
-        string_steps = []
-        for step in self._steps:
-            string_step = self._obj_to_string([step])
-            string_steps.append(string_step)
-        return string_steps
-
+            num_chars = fd.write(self._get_yaml_format())
 
     def add_resource(self, url, name='default', stream=True):
         dict_step = {
@@ -87,7 +84,7 @@ class BcodmoPipeline:
             'run': 'sort',
             'parameters': {
                 'resources': resources if resources else self._resources,
-                'sort-by': f'"{{{field}}}"',
+                'sort-by': f'{{{field}}}',
             }
         }
         self._steps.append(dict_step)
@@ -100,7 +97,7 @@ class BcodmoPipeline:
                 'fields': [{
                     'operation': 'format',
                     'target': output_field,
-                    'with': f'"{with_string}"',
+                    'with': with_string,
                 }]
             }
         }
@@ -164,15 +161,15 @@ class BcodmoPipeline:
                 'fields': [{
                     'input_field': input_field,
                     'output_field': output_field,
-                    'format': f'"{input_format}"',
-                    'pattern': f'"{pattern}"',
+                    'format': input_format,
+                    'pattern': pattern,
                 }]
             }
         }
         if resources:
             dict_step['parameters']['resources'] = resources
         if directional:
-            dict_step['parameters']['fields']['directional'] = f'"{directional}"'
+            dict_step['parameters']['fields']['directional'] = directional
         self._steps.append(dict_step)
 
     def convert_date(
@@ -197,18 +194,18 @@ class BcodmoPipeline:
             'run': custom_processor,
             'parameters': {
                 'fields': [{
-                    'input_field': f'"{input_field}"',
-                    'input_format': f'"{input_format}"',
-                    'output_field': f'"{output_field}"',
-                    'output_format': f'"{output_format}"',
-                    'output_timezone': f'"{output_timezone}"',
+                    'input_field': input_field,
+                    'input_format': input_format,
+                    'output_field': output_field,
+                    'output_format': output_format,
+                    'output_timezone': output_timezone,
                 }],
             }
         }
         if input_timezone:
-            dict_step['parameters']['fields'][0]['input_timezone'] = f'"{input_timezone}"'
+            dict_step['parameters']['fields'][0]['input_timezone'] = input_timezone
         if year:
-            dict_step['parameters']['fields'][0]['year'] = f'"{year}"'
+            dict_step['parameters']['fields'][0]['year'] = year
         if resources:
             dict_step['parameters']['resources'] = resources
         self._steps.append(dict_step)
@@ -245,6 +242,16 @@ class BcodmoPipeline:
         }
         self._steps.append(dict_step)
 
+    def _get_yaml_format(self):
+        return yaml.dump({
+            self.name: {
+                'title': self.title,
+                'description': self.description,
+                'pipeline': self._steps,
+            }
+        })
+
+
     def _obj_to_string(self, obj, depth=2):
         '''
         A recursive function that generates proper yaml format
@@ -271,3 +278,13 @@ class BcodmoPipeline:
 
         # Base case where the value is not a list or a dict
         return f' {obj}'
+
+    def _parse_pipeline_spec(self, pipeline_spec):
+        stream = io.StringIO(pipeline_spec)
+        try:
+            res = yaml.load(stream)
+            logger.info(res)
+        except yaml.YAMLError as e:
+            raise e
+        return None, None, None, [], []
+

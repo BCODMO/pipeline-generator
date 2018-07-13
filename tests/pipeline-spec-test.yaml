@@ -1,0 +1,115 @@
+test-pipeline:
+  title: Test Pipeline
+  description: Testing code to generate pipeline yaml files
+  pipeline:
+    -
+      run: add_resource
+      parameters:
+        url: /home/conrad/Projects/WHOI/development/pipeline-generator/tests/csv/test_data.csv
+        name: default
+    -
+      run: stream_remote_resources
+      cache: True
+    -
+      run: add_resource
+      parameters:
+        url: /home/conrad/Projects/WHOI/development/pipeline-generator/tests/csv/test_concat.csv
+        name: concat
+    -
+      run: stream_remote_resources
+      cache: True
+    -
+      run: concatenate
+      parameters:
+        target:
+          name: default
+          path: data/default
+        fields:
+          Genomic_Method: []
+          Taxon: []
+          Species: []
+          Lander: []
+          Lab_Intenifier: []
+          Block_Bone: []
+          Individuals: []
+          Lat: []
+          Long: []
+          Depth: []
+          TestRound: []
+          TestDate: []
+          TestDatetime: []
+          TestDateYear: []
+    -
+      run: delete_fields
+      parameters:
+        fields:
+          - Lander
+          - Block_Bone
+    -
+      run: sort
+      parameters:
+        resources:
+          - default
+        sort-by: "{Taxon}"
+    -
+      run: add_computed_field
+      parameters:
+        fields:
+          -
+            operation: format
+            target: Taxon-Species
+            with: "{Taxon} {Species}"
+    -
+      run: bcodmo-pipeline-processors.round_fields
+      parameters:
+        fields:
+          -
+            name: TestRound
+            digits: 2
+    -
+      run: bcodmo-pipeline-processors.convert_to_decimal_degrees
+      parameters:
+        fields:
+          -
+            input_field: Lat
+            output_field: Lat-converted
+            format: "degrees-decimal_minutes"
+            pattern: "%directional% %degrees%o %decimal_minutes%"
+    -
+      run: bcodmo-pipeline-processors.convert_to_decimal_degrees
+      parameters:
+        fields:
+          -
+            input_field: Long
+            output_field: Long-converted
+            format: "degrees-minutes-seconds"
+            pattern: "%directional% %degrees%o %minutes% %seconds%"
+    -
+      run: bcodmo-pipeline-processors.convert_date
+      parameters:
+        fields:
+          -
+            input_field: "TestDate"
+            input_format: "%Y-%m-%d"
+            output_field: "TestDateConverted"
+            output_format: "%Y-%m-%dT%H:%M:%SZ"
+            output_timezone: "UTC"
+            input_timezone: "US/Eastern"
+    -
+      run: bcodmo-pipeline-processors.convert_date
+      parameters:
+        fields:
+          -
+            input_field: "TestDateYear"
+            input_format: "%m-%d"
+            output_field: "TestDateYearConverted"
+            output_format: "%Y-%m-%dT%H:%M:%SZ"
+            output_timezone: "UTC"
+            input_timezone: "US/Eastern"
+            year: "2015"
+    -
+      run: bcodmo-pipeline-processors.infer_types
+    -
+      run: dump.to_path
+      parameters:
+        out-path: /home/conrad/Projects/WHOI/development/pipeline-generator/tests/data/
