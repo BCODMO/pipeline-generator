@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from subprocess import run, PIPE
+import yaml
 
 from bcodmo_pipeline import BcodmoPipeline
 from .constants import *
@@ -126,7 +127,9 @@ class TestBcodmoPipeline():
     def test_setup_obj(self):
         ''' Set up the objects for the rest of the tests to use '''
         with open(TEST_SAVE_PATH + 'datapackage.json') as f:
-            self.shared_data['datapackage_data'] = json.load(f)
+            data = json.load(f)
+            self.shared_data['datapackage_data'] = data
+            self.shared_data['fields'] = data['resources'][0]['schema']['fields']
 
         with open(TEST_SAVE_PATH + '/data/default.csv') as f:
             reader = csv.reader(f)
@@ -145,8 +148,8 @@ class TestBcodmoPipeline():
 
     def test_delete_fields(self):
         logger.info('Testing delete')
-        assert self.shared_data['datapackage_data']['resources'][0]['schema']['fields'][3]['name'] != 'Lander'
-        assert self.shared_data['datapackage_data']['resources'][0]['schema']['fields'][5]['name'] != 'Block Bone'
+        assert self.shared_data['fields'][3]['name'] != 'Lander'
+        assert self.shared_data['fields'][5]['name'] != 'Block Bone'
 
     def test_sort_field(self):
         logger.info('Testing sort')
@@ -154,7 +157,7 @@ class TestBcodmoPipeline():
 
     def test_combine_fields(self):
         logger.info('Testing combine fields')
-        assert self.shared_data['datapackage_data']['resources'][0]['schema']['fields'][12]['name'] == 'Taxon-Species'
+        assert self.shared_data['fields'][12]['name'] == 'Taxon-Species'
 
     def test_round_field(self):
         logger.info('Testing round field')
@@ -175,11 +178,11 @@ class TestBcodmoPipeline():
 
     def test_infer_types(self):
         logger.info('Testing infer types')
-        assert self.shared_data['datapackage_data']['resources'][0]['schema']['fields'][13]['type'] == 'number'
-        assert self.shared_data['datapackage_data']['resources'][0]['schema']['fields'][14]['type'] == 'number'
-        assert self.shared_data['datapackage_data']['resources'][0]['schema']['fields'][9]['type'] == 'date'
-        assert self.shared_data['datapackage_data']['resources'][0]['schema']['fields'][10]['type'] == 'datetime'
-        assert self.shared_data['datapackage_data']['resources'][0]['schema']['fields'][15]['type'] == 'datetime'
+        assert self.shared_data['fields'][13]['type'] == 'number'
+        assert self.shared_data['fields'][14]['type'] == 'number'
+        assert self.shared_data['fields'][9]['type'] == 'date'
+        assert self.shared_data['fields'][10]['type'] == 'datetime'
+        assert self.shared_data['fields'][15]['type'] == 'datetime'
 
 
     def teardown_class(self):
@@ -188,10 +191,13 @@ class TestBcodmoPipeline():
 def test_parse_pipeline_spec():
     with open(TEST_PATH + 'pipeline-spec-test.yaml', 'r') as fd:
         file_contents = fd.read()
+        file_contents_obj = yaml.load(file_contents)
     pipeline = BcodmoPipeline(pipeline_spec=file_contents)
     pipeline.save_to_file(TEST_SAVE_PATH + 'pipeline-spec-test-copy.yaml')
     with open(TEST_SAVE_PATH + 'pipeline-spec-test-copy.yaml', 'r') as fd:
-        assert fd.read() == file_contents
+        new_file_contents_obj = yaml.load(fd.read())
+
+        assert new_file_contents_obj == file_contents_obj
 
 #TODO Write tests for all lat lon formats
 

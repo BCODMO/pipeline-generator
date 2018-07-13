@@ -284,7 +284,37 @@ class BcodmoPipeline:
         try:
             res = yaml.load(stream)
             logger.info(res)
+
+            # Get the name
+            if type(res) != dict or len(res.keys()) != 1:
+                raise Exception('Improperly formatted pipeline-spec.yaml file - must have a single key dictionary as the root')
+            name = list(res.keys())[0]
+
+            # Get the title
+            if 'title' not in res[name]:
+                raise Exception('Title not found while parsing file')
+            # Get the description
+            if 'description' not in res[name]:
+                raise Exception('Description not found while parsing file')
+            title = res[name]['title']
+            description = res[name]['description']
+
+            # Get the pipeline
+            if 'pipeline' not in res[name]:
+                raise Exception('Pipeline not found while parsing file')
+            pipeline = res[name]['pipeline']
+
+            # Parse the pipeline
+            if not type(pipeline) == list:
+                raise Exception('Pipeline in file must be a list')
+            steps = []
+            for step in pipeline:
+                steps.append(step)
+
+
+
+
         except yaml.YAMLError as e:
             raise e
-        return None, None, None, [], []
+        return name, title, description, steps, []
 
