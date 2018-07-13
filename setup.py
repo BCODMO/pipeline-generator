@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-required = ['pyYAML==3.13']
+required = ['PyYAML==3.13']
 
 setup(
     name='pipeline-generator',
