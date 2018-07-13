@@ -1,17 +1,10 @@
-import os
 from setuptools import setup, find_packages
-
-here = os.path.abspath(os.path.dirname(__file__))
-
-about = {}
-with open(os.path.join(here, "bcodmo-pipeline", "__version__.py")) as f:
-    exec(f.read(), about)
 
 required = []
 
 setup(
     name='bpvalve',
-    version=about['__version__'],
+    version='v0.0.1dev',
     description='BCODMO Pipelines Library',
     author='BCODMO',
     author_email='admin@blocpower.org',
