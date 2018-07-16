@@ -11,14 +11,16 @@ class BcodmoPipeline:
     def __init__(self, *args, **kwargs):
         if 'pipeline_spec' in kwargs:
             self.name, self.title, \
-                self.description, self._steps, self._resources \
+                self.description, self._steps \
                 = self._parse_pipeline_spec(kwargs['pipeline_spec'])
         else:
             self.name = kwargs['name']
             self.title = kwargs['title']
             self.description = kwargs['description']
-            self._steps = []
-            self._resources = []
+            if 'steps' in kwargs:
+                self._steps = kwargs['steps']
+            else:
+                self._steps = []
 
     def save_to_file(self, file_path):
         with open(file_path, 'w') as fd:
@@ -33,7 +35,6 @@ class BcodmoPipeline:
             },
         }
         self._steps.append(dict_step)
-        self._resources.append(name)
         if stream:
             self._stream_remote_resources()
 
@@ -58,10 +59,6 @@ class BcodmoPipeline:
         }
         if sources:
             dict_step['parameters']['sources'] = resources
-            self._resources = list(filter(lambda resource: resource in resources, self._resources))
-            self._resources.append(target_name)
-        else:
-            self._resources = [target_name]
         self._steps.append(dict_step)
 
 
@@ -83,10 +80,12 @@ class BcodmoPipeline:
         dict_step = {
             'run': 'sort',
             'parameters': {
-                'resources': resources if resources else self._resources,
                 'sort-by': f'{{{field}}}',
+                'resources': None,
             }
         }
+        if resources:
+            dict_step['parameters']['resources'] = resources
         self._steps.append(dict_step)
 
     def combine_fields(self, output_field, fields, resources=None):
@@ -316,5 +315,5 @@ class BcodmoPipeline:
 
         except yaml.YAMLError as e:
             raise e
-        return name, title, description, steps, []
+        return name, title, description, steps
 
