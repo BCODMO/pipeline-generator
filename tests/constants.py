@@ -28,11 +28,11 @@ TEST_CONCAT = {
     },
 }
 TEST_DELETE_FIELDS = ['Lander', 'Block_Bone']
-TEST_SORT_FIELD = 'Taxon'
+TEST_SORT_BY = '{Taxon}'
 
 TEST_COMBINE_FIELDS = {
     'output_field': 'Taxon-Species',
-    'fields': ['Taxon', 'Species'],
+    'with': '{Taxon} {Species}',
 }
 
 TEST_ROUND_FIELD = {
@@ -48,26 +48,165 @@ TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD = {
 }
 
 TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS = {
-    'input_field': 'Long',
-    'output_field': 'Long-converted',
-    'format': 'degrees-minutes-seconds',
-    'pattern': '%directional% %degrees%o %minutes% %seconds%',
-}
+        'input_field': 'Long',
+        'output_field': 'Long-converted',
+        'format': 'degrees-minutes-seconds',
+        'pattern': '%directional% %degrees%o %minutes% %seconds%',
+    }
 
 TEST_CONVERT_DATE_DATE = {
-    'input_field': 'TestDate',
-    'input_format': '%Y-%m-%d',
-    'input_timezone': 'US/Eastern',
-    'output_field': 'TestDateConverted',
-    'output_format': '%Y-%m-%dT%H:%M:%SZ',
-    'output_timezone': 'UTC',
-}
+        'input_field': 'TestDate',
+        'input_format': '%Y-%m-%d',
+        'input_timezone': 'US/Eastern',
+        'output_field': 'TestDateConverted',
+        'output_format': '%Y-%m-%dT%H:%M:%SZ',
+        'output_timezone': 'UTC',
+        }
 TEST_CONVERT_DATE_MONTH_DAY = {
-    'input_field': 'TestDateYear',
-    'input_format': '%m-%d',
-    'input_timezone': 'US/Eastern',
-    'output_field': 'TestDateYearConverted',
-    'year': 2015,
-}
+        'input_field': 'TestDateYear',
+        'input_format': '%m-%d',
+        'input_timezone': 'US/Eastern',
+        'output_field': 'TestDateYearConverted',
+        'output_format': '%Y-%m-%dT%H:%M:%SZ',
+        'output_timezone': 'UTC',
+        'year': 2015,
+        }
 
 TEST_SAVE_PATH = TEST_PATH + 'data/'
+
+TEST_STEPS = [
+    {
+        "run": "add_resource",
+        "parameters": {
+            "name": "default",
+            "url": TEST_DATAPACKAGE_URL,
+        },
+    },
+    {
+        "run": "stream_remote_resources",
+        "cache": True,
+    },
+    {
+        "run": "add_resource",
+        "parameters": {
+            "name": TEST_CONCAT['datapackage']['name'],
+            "url": TEST_CONCAT['datapackage']['url'],
+        },
+    },
+    {
+        "run": "stream_remote_resources",
+        "cache": True,
+    },
+    {
+        "run": "concatenate",
+        "parameters": {
+            "fields": TEST_CONCAT['fields'],
+            "target": {
+                "name": "default",
+                "path": "data/default"
+            },
+        },
+    },
+    {
+        "run": "delete_fields",
+        "parameters": {
+            "fields": TEST_DELETE_FIELDS,
+        },
+    },
+    {
+        "run": "sort",
+        "parameters": {
+            "resources": None,
+            "sort-by": TEST_SORT_BY,
+        },
+    },
+    {
+        "run": "add_computed_field",
+        "parameters": {
+            "fields": [
+                {
+                    "operation": "format",
+                    "target": TEST_COMBINE_FIELDS['output_field'],
+                    "with": TEST_COMBINE_FIELDS['with'],
+                },
+            ],
+        },
+    },
+    {
+        "run": "bcodmo-pipeline-processors.round_fields",
+        "parameters": {
+            "fields": [
+                {
+                    "digits": TEST_ROUND_FIELD['digits'],
+                    "name": TEST_ROUND_FIELD['field'],
+                },
+            ],
+        },
+    },
+    {
+        "run": "bcodmo-pipeline-processors.convert_to_decimal_degrees",
+        "parameters": {
+            "fields": [
+                {
+                    "format": TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['format'],
+                    "input_field": TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['input_field'],
+                    "output_field": TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['output_field'],
+                    "pattern": TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['pattern'],
+                },
+            ],
+        },
+    },
+    {
+        "run": "bcodmo-pipeline-processors.convert_to_decimal_degrees",
+        "parameters": {
+            "fields": [
+                {
+                    "format": TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['format'],
+                    "input_field": TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['input_field'],
+                    "output_field": TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['output_field'],
+                    "pattern": TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['pattern'],
+                },
+            ],
+        },
+    },
+    {
+        "run": "bcodmo-pipeline-processors.convert_date",
+        "parameters": {
+            "fields": [
+                {
+                    "input_field": TEST_CONVERT_DATE_DATE['input_field'],
+                    "input_format": TEST_CONVERT_DATE_DATE['input_format'],
+                    "input_timezone": TEST_CONVERT_DATE_DATE['input_timezone'],
+                    "output_field": TEST_CONVERT_DATE_DATE['output_field'],
+                    "output_format": TEST_CONVERT_DATE_DATE['output_format'],
+                    "output_timezone": TEST_CONVERT_DATE_DATE['output_timezone'],
+                }
+            ]
+        },
+    },
+    {
+        "run": "bcodmo-pipeline-processors.convert_date",
+        "parameters": {
+            "fields": [
+                {
+                    "input_field": TEST_CONVERT_DATE_MONTH_DAY['input_field'],
+                    "input_format": TEST_CONVERT_DATE_MONTH_DAY['input_format'],
+                    "input_timezone": TEST_CONVERT_DATE_MONTH_DAY['input_timezone'],
+                    "output_field": TEST_CONVERT_DATE_MONTH_DAY['output_field'],
+                    "output_format": TEST_CONVERT_DATE_MONTH_DAY['output_format'],
+                    "output_timezone": TEST_CONVERT_DATE_MONTH_DAY['output_timezone'],
+                    "year": TEST_CONVERT_DATE_MONTH_DAY['year'],
+                }
+            ]
+        },
+    },
+    {
+        "run": "bcodmo-pipeline-processors.infer_types",
+    },
+    {
+        "run": "dump.to_path",
+        "parameters": {
+            "out-path": TEST_SAVE_PATH,
+        },
+    }
+]

@@ -22,70 +22,9 @@ class TestBcodmoPipeline():
         self.shared_data = {}
         self.pipeline = BcodmoPipeline(name=TEST_NAME, title=TEST_TITLE, description=TEST_DESCRIPTION)
 
-        # Add resource
-        self.pipeline.add_resource(TEST_DATAPACKAGE_URL)
+        for step in TEST_STEPS:
+            self.pipeline.add_generic(step)
 
-        # Concat
-        self.pipeline.add_resource(
-            TEST_CONCAT['datapackage']['url'],
-            name=TEST_CONCAT['datapackage']['name'],
-        )
-        self.pipeline.concatenate(TEST_CONCAT['fields'])
-
-        # Delete fields
-        self.pipeline.delete_fields(TEST_DELETE_FIELDS)
-
-        # Sort
-        self.pipeline.sort(TEST_SORT_FIELD)
-
-        # Combine
-        self.pipeline.combine_fields(
-            TEST_COMBINE_FIELDS['output_field'],
-            TEST_COMBINE_FIELDS['fields'],
-        )
-
-        # Round
-        self.pipeline.round_field(
-            TEST_ROUND_FIELD['field'],
-            TEST_ROUND_FIELD['digits'],
-        )
-
-        # Convert to decimal degrees
-        self.pipeline.convert_field_decimal_degrees(
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['input_field'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['output_field'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['format'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['pattern'],
-        )
-        self.pipeline.convert_field_decimal_degrees(
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['input_field'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['output_field'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['format'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['pattern'],
-        )
-
-        # Convert date time
-        self.pipeline.convert_date(
-            TEST_CONVERT_DATE_DATE['input_field'],
-            TEST_CONVERT_DATE_DATE['output_field'],
-            TEST_CONVERT_DATE_DATE['input_format'],
-            input_timezone=TEST_CONVERT_DATE_DATE['input_timezone'],
-            output_format=TEST_CONVERT_DATE_DATE['output_format'],
-            output_timezone=TEST_CONVERT_DATE_DATE['output_timezone'],
-        )
-        self.pipeline.convert_date(
-            TEST_CONVERT_DATE_MONTH_DAY['input_field'],
-            TEST_CONVERT_DATE_MONTH_DAY['output_field'],
-            TEST_CONVERT_DATE_MONTH_DAY['input_format'],
-            input_timezone=TEST_CONVERT_DATE_DATE['input_timezone'],
-            year=TEST_CONVERT_DATE_MONTH_DAY['year'],
-        )
-
-        # Infer types
-        self.pipeline.infer_types()
-
-        # Save datapackage
-        self.pipeline.save_datapackage(TEST_SAVE_PATH)
 
     def test_save(self):
         '''
