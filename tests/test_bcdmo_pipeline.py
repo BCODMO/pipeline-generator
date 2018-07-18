@@ -3,7 +3,7 @@ import io
 import json
 import logging
 import os
-from subprocess import run, PIPE
+from subprocess import run
 import yaml
 
 from bcodmo_pipeline import BcodmoPipeline
@@ -41,7 +41,6 @@ class TestBcodmoPipeline():
         assert os.path.isfile(fname)
 
     def test_dpp(self):
-        return
         '''
         Test actually running the pipeline with the pipeline-spec.yaml
         file that was generated
@@ -65,7 +64,6 @@ class TestBcodmoPipeline():
         assert os.path.isfile(TEST_SAVE_PATH + 'data/default.csv')
 
     def test_setup_obj(self):
-        return
         ''' Set up the objects for the rest of the tests to use '''
         with open(TEST_SAVE_PATH + 'datapackage.json') as f:
             data = json.load(f)
@@ -79,7 +77,6 @@ class TestBcodmoPipeline():
             self.shared_data['second_row'] = next(reader)
 
     def test_concatenate(self):
-        return
         logger.info('Testing concatenate')
 
         # Original file had 23 rows, add an extra row with concatenate
@@ -89,29 +86,24 @@ class TestBcodmoPipeline():
         assert self.shared_data['second_row'][12] == 'Aannelid Test'
 
     def test_delete_fields(self):
-        return
         logger.info('Testing delete')
         assert self.shared_data['fields'][3]['name'] != 'Lander'
         assert self.shared_data['fields'][5]['name'] != 'Block Bone'
 
     def test_sort_field(self):
-        return
         logger.info('Testing sort')
         assert self.shared_data['first_row'][12] == 'AAAAnnelid Amage sp.'
 
     def test_combine_fields(self):
-        return
         logger.info('Testing combine fields')
         assert self.shared_data['fields'][12]['name'] == 'Taxon-Species'
 
     def test_round_field(self):
-        return
         logger.info('Testing round field')
         # Confirm the value was rounded properly
         assert self.shared_data['first_row'][8] == '3.24'
 
     def test_convert_field_decimal_degrees(self):
-        return
         logger.info('Testing convert field to decimal degrees')
         # Confirm lat was succesfully converted
         assert self.shared_data['first_row'][13] == '47.27001666666666324090328998863697052001953125'
@@ -119,13 +111,11 @@ class TestBcodmoPipeline():
         assert self.shared_data['first_row'][14] == '-127.599166666666661740237032063305377960205078125'
 
     def test_convert_date(self):
-        return
         logger.info('Testing convert datetime')
         # Confirm that the datetime was succesfully converted
         assert self.shared_data['first_row'][15] == '2017-07-14 04:00:00'
 
     def test_infer_types(self):
-        return
         logger.info('Testing infer types')
         assert self.shared_data['fields'][13]['type'] == 'number'
         assert self.shared_data['fields'][14]['type'] == 'number'
@@ -145,11 +135,10 @@ class TestBcodmoPipeline():
         # Assert that the first line is the same
         with open(TEST_SAVE_PATH + '/data/default.csv') as f:
             reader = csv.reader(f)
-            next(reader)
+            header = next(reader)
             row = next(reader)
-            logger.info('ROW')
-            logger.info(row)
-            assert row == res['data'][1]
+            assert header == res['data']['header']
+            assert row == res['data']['row']
 
 
     def teardown_class(self):

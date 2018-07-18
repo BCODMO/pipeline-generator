@@ -1,7 +1,12 @@
+import csv
 import io
+import json
 import logging
-import yaml
+import os
+import shutil
+from subprocess import run, PIPE
 import uuid
+import yaml
 
 from .constants import VALID_OBJECTS
 
@@ -25,9 +30,11 @@ class BcodmoPipeline:
                 for step in kwargs['steps']:
                     self.add_generic(step)
 
-    def save_to_file(self, file_path):
+    def save_to_file(self, file_path, steps=None):
+        if not steps:
+            steps = self._steps
         with open(file_path, 'w') as fd:
-            num_chars = fd.write(self._get_yaml_format())
+            num_chars = fd.write(self._get_yaml_format(steps=steps))
 
     def get_yaml(self):
         return self._get_yaml_format()
@@ -47,8 +54,63 @@ class BcodmoPipeline:
 
     def run_pipeline(self):
         unique_id = uuid.uuid1()
-        self.save_to_file(f'./bcodmo_pipeline/tmp/{unique_id}/pipeline-spec.yaml')
-        pass
+        ''' IMPORTANT '''
+        # If the file structure between this file and the tmp folder
+        # ever changes this code must change
+        file_path = os.path.dirname(os.path.realpath(__file__))
+        path = f'{file_path}/tmp/{unique_id}'
+        # Create the directory and file
+        os.makedirs(path)
+        try:
+            # Create a new save step so we can access the data here
+            new_save_step = {
+                'run': 'dump.to_path',
+                'parameters': {
+                    'out-path': path,
+                }
+            }
+            new_steps = self._steps + [new_save_step]
+            logger.info('!!!!!!!!!!')
+            logger.info(new_steps)
+            logger.info('!!!!!!!!!!')
+            self.save_to_file(f'{path}/pipeline-spec.yaml', steps=new_steps)
+
+            completed_process = run(
+                f'cd {path}/.. && dpp run --verbose ./{unique_id}/{self.name}',
+                shell=True,
+                stdout=PIPE,
+                stdin=PIPE
+            )
+            logger.info(completed_process)
+            logger.info(vars(completed_process))
+
+            if completed_process.returncode != 0:
+                return {
+                    'status_code': completed_process.returncode,
+                }
+
+            with open(f'{path}/datapackage.json') as f:
+                datapackage = json.load(f)
+
+            # TODO: Somehow get a list of resource names here and return all of them
+            with open(f'{path}/data/default.csv') as f:
+                reader = csv.reader(f)
+                header = next(reader)
+                row = next(reader)
+
+
+
+            return {
+                'status_code': completed_process.returncode,
+                'datapackage': datapackage,
+                'data': {
+                    'header': header,
+                    'row': row,
+                },
+            }
+        finally:
+            # Clean up the directory
+            shutil.rmtree(path)
 
     def _confirm_valid(self, obj):
         ''' Confirm that an object is valid in the pipeline '''
@@ -84,12 +146,14 @@ class BcodmoPipeline:
         return True
 
 
-    def _get_yaml_format(self):
+    def _get_yaml_format(self, steps=None):
+        if not steps:
+            steps = self._steps
         return yaml.dump({
             self.name: {
                 'title': self.title,
                 'description': self.description,
-                'pipeline': self._steps,
+                'pipeline': steps,
             }
         })
 

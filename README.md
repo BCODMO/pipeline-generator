@@ -7,9 +7,13 @@ Run with python 3.6.5
 
 To test, create a data folder in `/tests/`
 
-Clone the `bcodmo-pipeline-processors` repository into the data folder
 
+Create the ENV variables 
+```
+TEST_PATH=/Path/To/tests/
+DPP_PROCESSOR_PATH=/Path/To/Processor/Submodule
+```
 
-Create the ENV variable `TEST_PATH=/Path/To/tests/`
+Processor submodule should simply be in `./bcodmo_pipeline` (but you should write out the whole path)
 
 Run `pytest`

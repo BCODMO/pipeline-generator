@@ -1,1 +1,2 @@
 PyYAML==3.13
+datapackage-pipelines==1.7.1
