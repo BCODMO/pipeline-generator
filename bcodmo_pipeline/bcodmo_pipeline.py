@@ -70,9 +70,6 @@ class BcodmoPipeline:
                 }
             }
             new_steps = self._steps + [new_save_step]
-            logger.info('!!!!!!!!!!')
-            logger.info(new_steps)
-            logger.info('!!!!!!!!!!')
             self.save_to_file(f'{path}/pipeline-spec.yaml', steps=new_steps)
 
             completed_process = run(
@@ -81,8 +78,6 @@ class BcodmoPipeline:
                 stdout=PIPE,
                 stdin=PIPE
             )
-            logger.info(completed_process)
-            logger.info(vars(completed_process))
 
             if completed_process.returncode != 0:
                 return {
@@ -161,7 +156,6 @@ class BcodmoPipeline:
         stream = io.StringIO(pipeline_spec)
         try:
             res = yaml.load(stream)
-            logger.info(res)
 
             # Get the name
             if type(res) != dict or len(res.keys()) != 1:
