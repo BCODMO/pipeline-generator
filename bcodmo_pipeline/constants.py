@@ -7,6 +7,7 @@ VALID_OBJECTS = {
         'valid_parameter_keys': [
             'name',
             'url',
+            'format',
         ],
     },
     'stream_remote_resources': {

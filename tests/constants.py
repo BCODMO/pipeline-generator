@@ -48,29 +48,29 @@ TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD = {
 }
 
 TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS = {
-        'input_field': 'Long',
-        'output_field': 'Long-converted',
-        'format': 'degrees-minutes-seconds',
-        'pattern': '%directional% %degrees%o %minutes% %seconds%',
-    }
+    'input_field': 'Long',
+    'output_field': 'Long-converted',
+    'format': 'degrees-minutes-seconds',
+    'pattern': '%directional% %degrees%o %minutes% %seconds%',
+}
 
 TEST_CONVERT_DATE_DATE = {
-        'input_field': 'TestDate',
-        'input_format': '%Y-%m-%d',
-        'input_timezone': 'US/Eastern',
-        'output_field': 'TestDateConverted',
-        'output_format': '%Y-%m-%dT%H:%M:%SZ',
-        'output_timezone': 'UTC',
-        }
+    'input_field': 'TestDate',
+    'input_format': '%Y-%m-%d',
+    'input_timezone': 'US/Eastern',
+    'output_field': 'TestDateConverted',
+    'output_format': '%Y-%m-%dT%H:%M:%SZ',
+    'output_timezone': 'UTC',
+}
 TEST_CONVERT_DATE_MONTH_DAY = {
-        'input_field': 'TestDateYear',
-        'input_format': '%m-%d',
-        'input_timezone': 'US/Eastern',
-        'output_field': 'TestDateYearConverted',
-        'output_format': '%Y-%m-%dT%H:%M:%SZ',
-        'output_timezone': 'UTC',
-        'year': 2015,
-        }
+    'input_field': 'TestDateYear',
+    'input_format': '%m-%d',
+    'input_timezone': 'US/Eastern',
+    'output_field': 'TestDateYearConverted',
+    'output_format': '%Y-%m-%dT%H:%M:%SZ',
+    'output_timezone': 'UTC',
+    'year': 2015,
+}
 
 TEST_SAVE_PATH = TEST_PATH + 'data/'
 

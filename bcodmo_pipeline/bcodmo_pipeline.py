@@ -19,10 +19,10 @@ class BcodmoPipeline:
             self.name = kwargs['name']
             self.title = kwargs['title']
             self.description = kwargs['description']
+            self._steps = []
             if 'steps' in kwargs:
-                self._steps = kwargs['steps']
-            else:
-                self._steps = []
+                for step in kwargs['steps']:
+                    self.add_generic(step)
 
     def save_to_file(self, file_path):
         with open(file_path, 'w') as fd:
@@ -41,10 +41,10 @@ class BcodmoPipeline:
         }
 
     def add_generic(self, obj):
-        self.confirm_valid(obj)
+        self._confirm_valid(obj)
         self._steps.append(obj)
 
-    def confirm_valid(self, obj):
+    def _confirm_valid(self, obj):
         ''' Confirm that an object is valid in the pipeline '''
         if type(obj) != dict:
             raise Exception('Object must be a dictionary')
@@ -65,11 +65,14 @@ class BcodmoPipeline:
                 if param_key not in rules['valid_parameter_keys']:
                     raise Exception(f'{param_key} not a valid parameter key')
 
+        # Confirm validity of fields keys
         if 'valid_fields_keys' in rules and 'fields' in obj['parameters']:
             for field in obj['parameters']['fields']:
                 for fields_key in field.keys():
                     if fields_key not in rules['valid_fields_keys']:
                         raise Exception(f'{fields_key} not a valid fields key')
+
+        return True
 
 
     def _get_yaml_format(self):
