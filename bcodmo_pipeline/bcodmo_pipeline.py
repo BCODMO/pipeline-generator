@@ -1,6 +1,7 @@
 import io
 import logging
 import yaml
+import uuid
 
 from .constants import VALID_OBJECTS
 
@@ -44,33 +45,41 @@ class BcodmoPipeline:
         self._confirm_valid(obj)
         self._steps.append(obj)
 
+    def run_pipeline(self):
+        unique_id = uuid.uuid1()
+        self.save_to_file(f'./bcodmo_pipeline/tmp/{unique_id}/pipeline-spec.yaml')
+        pass
+
     def _confirm_valid(self, obj):
         ''' Confirm that an object is valid in the pipeline '''
         if type(obj) != dict:
             raise Exception('Object must be a dictionary')
 
         # Confirm that the processor name is correct
-        if obj['run'] not in VALID_OBJECTS.keys():
-            raise Exception(f'{obj["run"]} is not a valid processor name')
-        rules = VALID_OBJECTS[obj['run']]
+        proc_name = obj['run']
+        if proc_name not in VALID_OBJECTS.keys():
+            raise Exception(f'{proc_name} is not a valid processor name')
+        rules = VALID_OBJECTS[proc_name]
 
         # Confirm validity of top level keys
         for key in obj.keys():
             if key not in rules['valid_top_keys']:
-                raise Exception(f'{key} not a valid top level key')
+                raise Exception(f'{key} not a valid top level key for {proc_name}')
 
         # Confirm validity of parameters keys
         if 'valid_parameter_keys' in rules and 'parameters' in obj:
             for param_key in obj['parameters'].keys():
                 if param_key not in rules['valid_parameter_keys']:
-                    raise Exception(f'{param_key} not a valid parameter key')
+                    raise Exception(
+                        f'{param_key} not a valid parameter key for {proc_name}'
+                    )
 
         # Confirm validity of fields keys
         if 'valid_fields_keys' in rules and 'fields' in obj['parameters']:
             for field in obj['parameters']['fields']:
                 for fields_key in field.keys():
                     if fields_key not in rules['valid_fields_keys']:
-                        raise Exception(f'{fields_key} not a valid fields key')
+                        raise Exception(f'{fields_key} not a valid fields key for {proc_name}')
 
         return True
 

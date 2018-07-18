@@ -1,0 +1,3 @@
+[submodule "bcodmo_pipeline/tmp/bcodmo-pipeline-processors"]
+	path = bcodmo_pipeline/tmp/bcodmo-pipeline-processors
+	url = git@github.com:BCODMO/bcodmo-pipeline-processors.git
