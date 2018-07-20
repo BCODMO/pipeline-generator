@@ -111,3 +111,5 @@ tests/data
 
 # yaml files
 *.yaml
+
+*/tmp/*
