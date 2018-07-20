@@ -4,9 +4,15 @@ import json
 import logging
 import os
 import shutil
-from subprocess import run, PIPE
+from subprocess import (
+    check_output,
+    STDOUT,
+    CalledProcessError,
+)
+import time
 import uuid
 import yaml
+import re
 
 from .constants import VALID_OBJECTS
 
@@ -14,6 +20,9 @@ logging.basicConfig(
     level=logging.DEBUG,
 )
 logger = logging.getLogger(__name__)
+
+# Day in seconds
+DAY = 60 * 60 * 24
 
 class BcodmoPipeline:
     def __init__(self, *args, **kwargs):
@@ -52,15 +61,38 @@ class BcodmoPipeline:
         self._confirm_valid(obj)
         self._steps.append(obj)
 
-    def run_pipeline(self):
-        unique_id = uuid.uuid1()
+    def run_pipeline(self, cache_id=None):
+        '''
+        Runs the datapackage pipelines for this pipeline
+
+        - On fail, return error message
+        - On success, return datapackage.json contents and the
+        first line of each resulting csv
+
+        - On both fail and success return a status code and a
+        unique id that can be passed back in to this function
+        to use the cache
+        '''
+        if not cache_id:
+            cache_id = str(uuid.uuid1())
+
+        # We have to check the cache_id value since it's
+        # potentially being passed in from the outside
+        pattern = re.compile(
+            r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}'
+            r'-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+        )
+        if not pattern.match(cache_id):
+            raise Exception('The unique ID that was provided was not in uuid format')
+
         ''' IMPORTANT '''
         # If the file structure between this file and the tmp folder
         # ever changes this code must change
         file_path = os.path.dirname(os.path.realpath(__file__))
-        path = f'{file_path}/tmp/{unique_id}'
+        path = f'{file_path}/tmp/{cache_id}'
         # Create the directory and file
-        os.makedirs(path)
+        if not os.path.exists(path):
+            os.makedirs(path)
         try:
             # Create a new save step so we can access the data here
             new_save_step = {
@@ -72,40 +104,72 @@ class BcodmoPipeline:
             new_steps = self._steps + [new_save_step]
             self.save_to_file(f'{path}/pipeline-spec.yaml', steps=new_steps)
 
-            completed_process = run(
-                f'cd {path}/.. && dpp run --verbose ./{unique_id}/{self.name}',
-                shell=True,
-                stdout=PIPE,
-                stdin=PIPE
-            )
-
-            if completed_process.returncode != 0:
+            try:
+                # Remove the data folder
+                shutil.rmtree(f'{path}/data', ignore_errors=True)
+                completed_process = check_output(
+                    f'cd {path}/.. && dpp run ./{cache_id}/{self.name}',
+                    shell=True,
+                    stderr=STDOUT,
+                    universal_newlines=True,
+                )
+            except CalledProcessError as e:
                 return {
-                    'status_code': completed_process.returncode,
+                    'status_code': e.returncode,
+                    'error_text': e.output,
+                    'cache_id': cache_id,
                 }
 
             with open(f'{path}/datapackage.json') as f:
                 datapackage = json.load(f)
 
-            # TODO: Somehow get a list of resource names here and return all of them
-            with open(f'{path}/data/default.csv') as f:
-                reader = csv.reader(f)
-                header = next(reader)
-                row = next(reader)
-
-
+            resources = {}
+            # Go through all of outputted data
+            data_folder = f'{path}/data'
+            if os.path.exists(data_folder):
+                for fname in os.listdir(data_folder):
+                    logger.info('!!!!!!!')
+                    logger.info(fname)
+                    resource_name, ext = os.path.splitext(fname)
+                    # TODO support json format?
+                    if ext != '.csv':
+                        raise Exception(f'Non csv formats are not supported: {fname}')
+                    file_path = f'{data_folder}/{fname}'
+                    with open(file_path) as f:
+                        reader = csv.reader(f)
+                        header = next(reader)
+                        row = next(reader)
+                        resources[resource_name] = {
+                            'header': header,
+                            'row': row,
+                        }
+                    logger.info('!!!!!!!$')
 
             return {
-                'status_code': completed_process.returncode,
+                'status_code': 0,
+                'cache_id': cache_id,
                 'datapackage': datapackage,
-                'data': {
-                    'header': header,
-                    'row': row,
-                },
+                'resources': resources,
             }
         finally:
-            # Clean up the directory
-            shutil.rmtree(path)
+            try:
+                # Clean up the directory, deleting old folders
+                cur_time = time.time()
+                dirs = [
+                    folder_name for folder_name in os.listdir(f'{file_path}/tmp')
+                    if not folder_name.startswith('.')
+                ]
+                for folder_name in dirs:
+                    folder = f'{file_path}/tmp/{folder_name}'
+                    st = os.stat(folder)
+                    modified_time = st.st_mtime
+                    age = cur_time - modified_time
+
+                    if age > DAY:
+                        shutil.rmtree(folder)
+            except Exception as e:
+                logger.info(f'There was an error trying to clean up folder: {str(e)}')
+                logger.error(vars(e))
 
     def _confirm_valid(self, obj):
         ''' Confirm that an object is valid in the pipeline '''

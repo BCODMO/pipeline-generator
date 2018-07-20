@@ -16,26 +16,29 @@ VALID_OBJECTS = {
             'cache',
             'resources',
         ],
+        'valid_parameter_keys': [
+            'resources',
+        ],
     },
     'concatenate': {
         'valid_top_keys': [
             'run',
             'parameters',
-            'resources',
         ],
         'valid_parameter_keys': [
             'fields',
             'target',
+            'resources',
         ],
     },
     'delete_fields': {
         'valid_top_keys': [
             'run',
             'parameters',
-            'resources',
         ],
         'valid_parameter_keys': [
             'fields',
+            'resources',
         ],
 
     },
