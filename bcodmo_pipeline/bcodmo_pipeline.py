@@ -128,8 +128,6 @@ class BcodmoPipeline:
             data_folder = f'{path}/data'
             if os.path.exists(data_folder):
                 for fname in os.listdir(data_folder):
-                    logger.info('!!!!!!!')
-                    logger.info(fname)
                     resource_name, ext = os.path.splitext(fname)
                     # TODO support json format?
                     if ext != '.csv':
@@ -143,7 +141,6 @@ class BcodmoPipeline:
                             'header': header,
                             'row': row,
                         }
-                    logger.info('!!!!!!!$')
 
             return {
                 'status_code': 0,
