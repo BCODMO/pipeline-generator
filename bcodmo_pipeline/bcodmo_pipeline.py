@@ -132,8 +132,8 @@ class BcodmoPipeline:
                     # TODO support json format?
                     if ext != '.csv':
                         raise Exception(f'Non csv formats are not supported: {fname}')
-                    file_path = f'{data_folder}/{fname}'
-                    with open(file_path) as f:
+                    data_file_path = f'{data_folder}/{fname}'
+                    with open(data_file_path) as f:
                         reader = csv.reader(f)
                         header = next(reader)
                         row = next(reader)

@@ -28,7 +28,7 @@ VALID_OBJECTS = {
         'valid_parameter_keys': [
             'fields',
             'target',
-            'resources',
+            'sources',
         ],
     },
     'delete_fields': {
@@ -64,6 +64,7 @@ VALID_OBJECTS = {
         'valid_fields_keys': [
             'operation',
             'target',
+            'source',
             'with',
         ],
     },
