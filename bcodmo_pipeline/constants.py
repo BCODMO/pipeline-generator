@@ -8,13 +8,15 @@ VALID_OBJECTS = {
             'name',
             'url',
             'format',
+            'sheet',
+            'headers',
         ],
     },
     'stream_remote_resources': {
         'valid_top_keys': [
             'run',
             'cache',
-            'resources',
+            'parameters',
         ],
         'valid_parameter_keys': [
             'resources',

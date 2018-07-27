@@ -61,7 +61,7 @@ class BcodmoPipeline:
         self._confirm_valid(obj)
         self._steps.append(obj)
 
-    def run_pipeline(self, cache_id=None):
+    def run_pipeline(self, cache_id=None, verbose=False, num_rows=1):
         '''
         Runs the datapackage pipelines for this pipeline
 
@@ -107,8 +107,12 @@ class BcodmoPipeline:
             try:
                 # Remove the data folder
                 shutil.rmtree(f'{path}/data', ignore_errors=True)
+                if verbose:
+                    verbose_string = '--verbose'
+                else:
+                    verbose_string = ''
                 completed_process = check_output(
-                    f'cd {path}/.. && dpp run ./{cache_id}/{self.name}',
+                    f'cd {path}/.. && dpp run {verbose_string} ./{cache_id}/{self.name}',
                     shell=True,
                     stderr=STDOUT,
                     universal_newlines=True,
@@ -136,10 +140,20 @@ class BcodmoPipeline:
                     with open(data_file_path) as f:
                         reader = csv.reader(f)
                         header = next(reader)
-                        row = next(reader)
+                        rows = []
+                        try:
+                            if num_rows >= 0:
+                                for i in range(num_rows):
+                                    rows.append(next(reader))
+                            else:
+                                while True:
+                                    row = next(reader)
+                                    rows.append(row)
+                        except StopIteration:
+                            pass
                         resources[resource_name] = {
                             'header': header,
-                            'row': row,
+                            'rows': rows,
                         }
 
             return {
