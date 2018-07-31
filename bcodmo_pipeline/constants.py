@@ -98,6 +98,7 @@ VALID_OBJECTS = {
             'input_field',
             'output_field',
             'pattern',
+            'directional',
         ],
     },
     'bcodmo-pipeline-processors.convert_date': {

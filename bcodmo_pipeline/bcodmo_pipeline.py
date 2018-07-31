@@ -89,6 +89,7 @@ class BcodmoPipeline:
         # If the file structure between this file and the tmp folder
         # ever changes this code must change
         file_path = os.path.dirname(os.path.realpath(__file__))
+        os.environ['DPP_PROCESSOR_PATH'] = file_path
         path = f'{file_path}/tmp/{cache_id}'
         # Create the directory and file
         if not os.path.exists(path):
