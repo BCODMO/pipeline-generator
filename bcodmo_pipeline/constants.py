@@ -70,6 +70,20 @@ VALID_OBJECTS = {
             'with',
         ],
     },
+    'find_replace': {
+        'valid_top_keys': [
+            'run',
+            'parameters',
+        ],
+        'valid_parameter_keys': [
+            'fields',
+            'resources',
+        ],
+        'valid_fields_keys': [
+            'name',
+            'patterns',
+        ],
+    },
     'bcodmo-pipeline-processors.round_fields': {
         'valid_top_keys': [
             'run',
