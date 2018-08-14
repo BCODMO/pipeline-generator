@@ -20,6 +20,7 @@ VALID_OBJECTS = {
         ],
         'valid_parameter_keys': [
             'resources',
+            'limit-rows',
         ],
     },
     'concatenate': {
@@ -31,6 +32,17 @@ VALID_OBJECTS = {
             'fields',
             'target',
             'sources',
+        ],
+    },
+    'join': {
+        'valid_top_keys': [
+            'run',
+            'parameters',
+        ],
+        'valid_parameter_keys': [
+            'target',
+            'source',
+            'fields',
         ],
     },
     'delete_fields': {
