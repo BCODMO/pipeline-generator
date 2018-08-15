@@ -96,7 +96,7 @@ VALID_OBJECTS = {
             'patterns',
         ],
     },
-    'bcodmo-pipeline-processors.round_fields': {
+    'bcodmo_pipeline_processors.round_fields': {
         'valid_top_keys': [
             'run',
             'parameters',
@@ -110,7 +110,7 @@ VALID_OBJECTS = {
             'name',
         ],
     },
-    'bcodmo-pipeline-processors.convert_to_decimal_degrees': {
+    'bcodmo_pipeline_processors.convert_to_decimal_degrees': {
         'valid_top_keys': [
             'run',
             'parameters',
@@ -127,7 +127,7 @@ VALID_OBJECTS = {
             'directional',
         ],
     },
-    'bcodmo-pipeline-processors.convert_date': {
+    'bcodmo_pipeline_processors.convert_date': {
         'valid_top_keys': [
             'run',
             'parameters',
@@ -146,7 +146,7 @@ VALID_OBJECTS = {
             'year',
         ],
     },
-    'bcodmo-pipeline-processors.infer_types': {
+    'bcodmo_pipeline_processors.infer_types': {
         'valid_top_keys': [
             'run',
         ],
