@@ -12,6 +12,24 @@ VALID_OBJECTS = {
             'headers',
         ],
     },
+    'add_metadata': {
+        'valid_top_keys': [
+            'run',
+            'parameters',
+        ],
+        'valid_parameter_keys': [
+            'name',
+            'licenses',
+            'title',
+            'description',
+            'homepage',
+            'version',
+            'sources',
+            'contributors',
+            'keyword',
+            'created',
+        ],
+    },
     'stream_remote_resources': {
         'valid_top_keys': [
             'run',
