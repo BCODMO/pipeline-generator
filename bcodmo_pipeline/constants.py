@@ -178,5 +178,19 @@ VALID_OBJECTS = {
             'out-path',
         ],
     },
+    'bcodmo_pipeline_processors.boolean_add_computed_field': {
+        'valid_top_keys': [
+            'run',
+            'parameters',
+        ],
+        'valid_parameter_keys': [
+            'fields',
+            'resources',
+        ],
+        'valid_fields_keys': [
+            'functions',
+            'target',
+        ],
+    },
 }
 
