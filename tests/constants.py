@@ -72,6 +72,17 @@ TEST_CONVERT_DATE_MONTH_DAY = {
     'year': 2015,
 }
 
+TEST_BOOLEAN_ADD_COMPUTED_FIELD = [
+    {
+        'value': 'SHOULD NEVER BE THIS',
+        'boolean': '{TestRound} > 50'
+    },
+    {
+        'value': 'SHOULD BE THIS',
+        'boolean': '{TestRound} < 50 && {TestRound} < 9999999'
+    },
+]
+
 TEST_SAVE_PATH = TEST_PATH + 'data/'
 
 TEST_STEPS = [
@@ -133,7 +144,7 @@ TEST_STEPS = [
         },
     },
     {
-        "run": "bcodmo-pipeline-processors.round_fields",
+        "run": "bcodmo_pipeline_processors.round_fields",
         "parameters": {
             "fields": [
                 {
@@ -144,7 +155,7 @@ TEST_STEPS = [
         },
     },
     {
-        "run": "bcodmo-pipeline-processors.convert_to_decimal_degrees",
+        "run": "bcodmo_pipeline_processors.convert_to_decimal_degrees",
         "parameters": {
             "fields": [
                 {
@@ -157,7 +168,7 @@ TEST_STEPS = [
         },
     },
     {
-        "run": "bcodmo-pipeline-processors.convert_to_decimal_degrees",
+        "run": "bcodmo_pipeline_processors.convert_to_decimal_degrees",
         "parameters": {
             "fields": [
                 {
@@ -170,7 +181,7 @@ TEST_STEPS = [
         },
     },
     {
-        "run": "bcodmo-pipeline-processors.convert_date",
+        "run": "bcodmo_pipeline_processors.convert_date",
         "parameters": {
             "fields": [
                 {
@@ -185,7 +196,7 @@ TEST_STEPS = [
         },
     },
     {
-        "run": "bcodmo-pipeline-processors.convert_date",
+        "run": "bcodmo_pipeline_processors.convert_date",
         "parameters": {
             "fields": [
                 {
@@ -201,7 +212,27 @@ TEST_STEPS = [
         },
     },
     {
-        "run": "bcodmo-pipeline-processors.infer_types",
+        "run": "bcodmo_pipeline_processors.boolean_add_computed_field",
+        "parameters": {
+            "fields": [
+                {
+                    'target': 'bool_computed_field',
+                    'functions': [
+                        {
+                            'value': TEST_BOOLEAN_ADD_COMPUTED_FIELD[0]['value'],
+                            'boolean': TEST_BOOLEAN_ADD_COMPUTED_FIELD[0]['boolean'],
+                        },
+                        {
+                            'value': TEST_BOOLEAN_ADD_COMPUTED_FIELD[1]['value'],
+                            'boolean': TEST_BOOLEAN_ADD_COMPUTED_FIELD[1]['boolean'],
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+    {
+        "run": "bcodmo_pipeline_processors.infer_types",
     },
     {
         "run": "dump.to_path",

@@ -114,6 +114,13 @@ class TestBcodmoPipeline():
         logger.info('Testing convert datetime')
         # Confirm that the datetime was succesfully converted
         assert self.shared_data['first_row'][15] == '2017-07-14 04:00:00'
+        assert self.shared_data['first_row'][16] == '2015-04-16 04:56:00'
+
+    def test_boolean_add_computed_field(self):
+        logger.info('Testing boolean add computed field')
+        # Confirm the value was rounded properly
+        assert self.shared_data['first_row'][17] == TEST_BOOLEAN_ADD_COMPUTED_FIELD[1]['value']
+
 
     def test_infer_types(self):
         logger.info('Testing infer types')
@@ -126,6 +133,7 @@ class TestBcodmoPipeline():
 
     def test_run_pipeline(self):
         res = self.pipeline.run_pipeline()
+        logger.info(res)
         assert res['status_code'] == 0
         # Assert that the datapackage is the same
         with open(TEST_SAVE_PATH + 'datapackage.json') as f:
@@ -137,8 +145,8 @@ class TestBcodmoPipeline():
             reader = csv.reader(f)
             header = next(reader)
             row = next(reader)
-            assert header == res['data']['header']
-            assert row == res['data']['row']
+            assert header == res['resources']['default']['header']
+            assert row == res['resources']['default']['rows'][0]
 
 
     def teardown_class(self):
