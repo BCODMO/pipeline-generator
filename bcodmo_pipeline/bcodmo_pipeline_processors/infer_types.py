@@ -129,11 +129,6 @@ resources = ResourceMatcher(parameters.get('resources'))
 
 
 
-def match_fields(field_name_re, expected):
-    def filt(field):
-        return (field_name_re.fullmatch(field['name']) is not None) is expected
-    return filt
-
 
 def modify_datapackage(datapackage_):
 
@@ -147,20 +142,12 @@ def modify_datapackage(datapackage_):
 
         fields = resource.setdefault('schema', {}).get('fields', [])
         for field_name, field_definition in table_types[name].items():
-            field_name_re = re.compile(field_name)
             if field_definition is not None:
-                filtered_fields = list(
-                    filter(match_fields(field_name_re, True), fields)
-                )
-
+                filtered_fields = [field for field in fields if field['name'] == field_name]
                 for field in filtered_fields:
                     field.update(field_definition)
                 assert len(filtered_fields) > 0, \
                     "No field found matching %r" % field_name
-            else:
-                fields = list(
-                    filter(match_fields(field_name_re, False), fields)
-                )
 
         resource['schema']['fields'] = fields
     return datapackage_
