@@ -130,6 +130,11 @@ class TestBcodmoPipeline():
         assert self.shared_data['fields'][10]['type'] == 'datetime'
         assert self.shared_data['fields'][15]['type'] == 'datetime'
 
+    def test_add_resource_metadata(self):
+        resources = self.shared_data['datapackage_data']['resources']
+        assert resources[0]['schema']['missingKeys'] == TEST_ADD_SCHEMA_METADATA['missingKeys']
+
+
 
     def test_run_pipeline(self):
         res = self.pipeline.run_pipeline()

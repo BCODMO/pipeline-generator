@@ -192,5 +192,10 @@ VALID_OBJECTS = {
             'target',
         ],
     },
+    'bcodmo_pipeline_processors.add_schema_metadata': {
+        'valid_top_keys': [
+            'run',
+            'parameters',
+        ],
+    },
 }
-

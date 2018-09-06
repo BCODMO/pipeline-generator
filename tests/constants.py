@@ -83,6 +83,11 @@ TEST_BOOLEAN_ADD_COMPUTED_FIELD = [
     },
 ]
 
+TEST_ADD_SCHEMA_METADATA = {
+    'resources': ['default'],
+    'missingKeys': ['nd', ''],
+}
+
 TEST_SAVE_PATH = TEST_PATH + 'data/'
 
 TEST_STEPS = [
@@ -233,6 +238,10 @@ TEST_STEPS = [
     },
     {
         "run": "bcodmo_pipeline_processors.infer_types",
+    },
+    {
+        "run": "bcodmo_pipeline_processors.add_schema_metadata",
+        "parameters": TEST_ADD_SCHEMA_METADATA,
     },
     {
         "run": "dump.to_path",
