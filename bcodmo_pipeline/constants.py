@@ -17,19 +17,17 @@ VALID_OBJECTS = {
             'run',
             'parameters',
         ],
-        'valid_parameter_keys': [
-            'name',
-            'licenses',
-            'title',
-            'description',
-            'homepage',
-            'version',
-            'sources',
-            'contributors',
-            'keyword',
-            'created',
-        ],
     },
+    'set_types': {
+        'valid_top_keys': [
+            'run',
+            'parameters',
+        ],
+        'valid_parameter_keys': [
+            'resources',
+            'types',
+        ],
+    }
     'stream_remote_resources': {
         'valid_top_keys': [
             'run',
