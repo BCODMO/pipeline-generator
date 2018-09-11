@@ -25,7 +25,7 @@ def modify_datapackage(datapackage_):
     return datapackage_
 
 
-def process_resource(rows):
+def process_resource(rows, missing_data_values):
     for row in rows:
         for field in fields:
             input_field = field['input_field']
@@ -33,6 +33,10 @@ def process_resource(rows):
                 raise Exception(f'Input field {input_field} not found in row')
             row_value = row[input_field]
             output_field = field['output_field']
+
+            if row_value in missing_data_values:
+                row[output_field] = row_value
+                continue
 
             # If directional is user inputted, get it
             directional_inputted = 'directional' in field and field['directional']
@@ -100,14 +104,14 @@ def process_resource(rows):
                 decimal_degrees = degrees + (decimal_minutes / 60)
 
             # Handle  change in sign if directional requires
-            logger.info(f'Decimal degrees is {decimal_degrees}')
-            logger.info(f'Direcitonal is {directional}')
-            logger.info(f'Direcitonal type is {type(directional)}')
+            #logger.info(f'Decimal degrees is {decimal_degrees}')
+            #logger.info(f'Direcitonal is {directional}')
+            #logger.info(f'Direcitonal type is {type(directional)}')
             if (directional == 'W' or directional == 'S') and decimal_degrees >= 0:
-                logger.info('Direcetional was correct, multiplying by -1')
+                #logger.info('Direcetional was correct, multiplying by -1')
                 decimal_degrees *= -1
 
-            logger.info(f'After, decimal degrees is {decimal_degrees}')
+            #logger.info(f'After, decimal degrees is {decimal_degrees}')
             row[output_field] = decimal_degrees
 
         yield row
@@ -176,7 +180,16 @@ def process_resources(resource_iterator_):
         if not resources.match(spec['name']):
             yield resource
         else:
-            yield process_resource(resource)
+            missing_data_values = ['']
+            for resource_datapackage in datapackage.get('resources', []):
+                if resource_datapackage['name'] == spec['name']:
+                    missing_data_values = resource_datapackage.get(
+                        'schema', {},
+                    ).get(
+                        'missingValues', ['']
+                    )
+                    break
+            yield process_resource(resource, missing_data_values)
 
 
 spew(modify_datapackage(datapackage), process_resources(resource_iterator))
