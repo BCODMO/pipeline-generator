@@ -27,7 +27,7 @@ VALID_OBJECTS = {
             'resources',
             'types',
         ],
-    }
+    },
     'stream_remote_resources': {
         'valid_top_keys': [
             'run',
