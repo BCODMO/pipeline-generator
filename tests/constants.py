@@ -44,14 +44,14 @@ TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD = {
     'input_field': 'Lat',
     'output_field': 'Lat-converted',
     'format': 'degrees-decimal_minutes',
-    'pattern': '%directional% %degrees%o %decimal_minutes%',
+    'pattern': '(?P<directional>.*) (?P<degrees>.*)o (?P<decimal_minutes>.*)',
 }
 
 TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS = {
     'input_field': 'Long',
     'output_field': 'Long-converted',
     'format': 'degrees-minutes-seconds',
-    'pattern': '%directional% %degrees%o %minutes% %seconds%',
+    'pattern': '(?P<directional>.*) (?P<degrees>.*)o (?P<minutes>.*) (?P<seconds>.*)',
 }
 
 TEST_CONVERT_DATE_DATE = {

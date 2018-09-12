@@ -34,65 +34,71 @@ def process_resource(rows, missing_data_values):
             row_value = row[input_field]
             output_field = field['output_field']
 
-            if row_value in missing_data_values:
+            if row_value in missing_data_values or row_value is None:
                 row[output_field] = row_value
                 continue
 
+
             # If directional is user inputted, get it
-            directional_inputted = 'directional' in field and field['directional']
+            directional = 'directional' in field and field['directional']
 
             pattern = field['pattern']
             input_format = field['format']
+            match = re.search(pattern, row_value)
+            # Ensure there is a match
+            if not match:
+                raise Exception(f'Match not found for expression \"{pattern}\" and value \"{row_value}\"')
+
+            # Get the degrees value
+            try:
+                degrees = float(match.group('degrees'))
+            except IndexError:
+                raise Exception(f'The degrees group is required in the expression \"{pattern}\"')
+            except ValueError:
+                raise Exception(f'Couldn\'t convert "{match.group("degrees")}" to a number: from line "{row_value}"')
+
+            # Get the directional value
+            if directional in field:
+                directional = field['directional']
+            else:
+                try:
+                    directional = match.group('directional')
+                except IndexError:
+                    directional = None
+
 
             # Input is degrees, minutes, seconds
             if input_format == 'degrees-minutes-seconds':
 
-                if '%degrees%' not in pattern:
-                    raise Exception('%degrees% not in the inputted pattern for converting to decimal degrees')
-                if '%minutes%' not in pattern:
-                    raise Exception('%minutes% not in the inputted pattern for converting to decimal degrees')
-                if '%seconds%' not in pattern:
-                    raise Exception('%seconds% not in the inputted pattern for converting to decimal degrees')
+                # Get the minutes value
+                try:
+                    minutes = float(match.group('minutes'))
+                except IndexError:
+                    raise Exception(f'The minutes group is required in the expression \"{pattern}\"')
+                except ValueError:
+                    raise Exception(f'Couldn\'t convert "{match.group("minutes")}" to a number: from line "{row_value}"')
 
-                degrees = find_numeric_coordinate_parameter('degrees', pattern, row_value)
-                minutes = find_numeric_coordinate_parameter('minutes', pattern, row_value)
-                seconds = find_numeric_coordinate_parameter('seconds', pattern, row_value)
+                # Get the seconds value
+                try:
+                    seconds = float(match.group('seconds'))
+                except IndexError:
+                    raise Exception(f'The seconds group is required in the expression \"{pattern}\"')
+                except ValueError:
+                    raise Exception(f'Couldn\'t convert "{match.group("seconds")}" to a number: from line "{row_value}"')
+
                 if seconds >= 60:
                     raise Exception(f'Seconds are greater than 60: {seconds}')
                 decimal_minutes = minutes + (seconds / 60)
 
-                if directional_inputted:
-                    directional = field['directional']
-                elif '%directional%' in pattern:
-                    directional = find_directional_parameter(pattern, row_value)
-                else:
-                    directional = None
-
-#                logger.debug(f'Row: {row_value}')
-#                logger.debug(f'Degrees: {degrees}')
-#                logger.debug(f'Decimal minuets: {decimal_minutes}')
-#                logger.debug(f'Directional: {directional}')
-
             # Input is degrees, decimal seconds
             elif input_format == 'degrees-decimal_minutes':
-                if '%degrees%' not in pattern:
-                    raise Exception('%degrees% not in the inputted pattern for converting to decimal degrees')
-                if '%decimal_minutes%' not in pattern:
-                    raise Exception('%decimal_minutes% not in the inputted pattern for converting to decimal degrees')
-
-                degrees = find_numeric_coordinate_parameter('degrees', pattern, row_value)
-                decimal_minutes = find_numeric_coordinate_parameter('decimal_minutes', pattern, row_value)
-                if directional_inputted:
-                    directional = field['directional']
-                elif '%directional%' in pattern:
-                    directional = find_directional_parameter(pattern, row_value)
-                else:
-                    directional = None
-
-#                logger.debug(f'Row: {row_value}')
-#                logger.debug(f'Degrees: {degrees}')
-#                logger.debug(f'Decimal minuets: {decimal_minutes}')
-#                logger.debug(f'Directional: {directional}')
+                # Get the decimal_minutes value
+                try:
+                    decimal_minutes = float(match.group('decimal_minutes'))
+                except IndexError:
+                    raise Exception(f'The decimal_minutes group is required in the expression \"{pattern}\"')
+                except ValueError:
+                    raise Exception(f'Couldn\'t convert "{match.group("decimal_minutes")}" to a number: from line "{row_value}"')
 
             if decimal_minutes >= 60:
                 raise Exception(f'Decimal minutes are greater than 60: {decimal_minutes}')
@@ -103,75 +109,12 @@ def process_resource(rows, missing_data_values):
                 # TODO: is it always true that decimal_minutes will be positive?
                 decimal_degrees = degrees + (decimal_minutes / 60)
 
-            # Handle  change in sign if directional requires
-            #logger.info(f'Decimal degrees is {decimal_degrees}')
-            #logger.info(f'Direcitonal is {directional}')
-            #logger.info(f'Direcitonal type is {type(directional)}')
             if (directional == 'W' or directional == 'S') and decimal_degrees >= 0:
-                #logger.info('Direcetional was correct, multiplying by -1')
                 decimal_degrees *= -1
 
-            #logger.info(f'After, decimal degrees is {decimal_degrees}')
             row[output_field] = decimal_degrees
 
         yield row
-
-def find_numeric_coordinate_parameter(name, pattern, row_value):
-    '''
-    Takes in a name, pattern and row value and returns the value corresponding to the named parameter
-
-    name should be one of 'degrees', 'decimal_minutes', 'minutes', or 'seconds'
-    '''
-    # Create the regular expression
-    regex = remove_all_coordinate_parameters(
-        # Escape any regex characters that might have been present in the original string
-        re.escape(pattern).replace(
-            f'\\%{name}\\%', '(\d*\.?\d+)',
-        )
-    )
-    match = re.match(regex, row_value)
-    if not match:
-        raise Exception(f'Match not found for {name}: expression \"{regex}\" and value \"{row_value}\"')
-    return float(match.group(1))
-
-def find_directional_parameter(pattern, row_value):
-    '''
-    Takes in a pattern and row value and returns the directional value
-    '''
-    # Create the regular expression
-    regex = remove_all_coordinate_parameters(
-        # Escape any regex characters that might have been present in the original string
-        re.escape(pattern).replace(
-            f'\\%directional\\%', '(\w+)',
-        )
-    )
-    match = re.match(regex, row_value)
-    if not match:
-        raise Exception(f'Match not found for directional: expression \"{regex}\" and value \"{row_value}\"')
-    directional = match.group(1)
-    if directional in ['N', 'n', 'North', 'NORTH']:
-        return 'N'
-    elif directional in ['S', 's', 'South', 'SOUTH']:
-        return 'S'
-    elif directional in ['E', 'e', 'East', 'EAST']:
-        return 'E'
-    elif directional in ['W', 'w', 'West', 'WEST']:
-        return 'W'
-    raise Exception(f'Directional {directional} doesn\t match any known directional pattern')
-
-def remove_all_coordinate_parameters(string):
-    ''' Converts all coordinate parameters into .* wildcard matches '''
-    return string.replace(
-        '\\%degrees\\%', '.*',
-    ).replace(
-        '\\%decimal_minutes\\%', '.*',
-    ).replace(
-        '\\%minutes\\%', '.*',
-    ).replace(
-        '\\%seconds\\%', '.*',
-    ).replace(
-        '\\%directional\\%', '.*',
-    )
 
 
 def process_resources(resource_iterator_):
