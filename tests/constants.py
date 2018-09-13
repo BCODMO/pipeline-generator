@@ -72,16 +72,18 @@ TEST_CONVERT_DATE_MONTH_DAY = {
     'year': 2015,
 }
 
-TEST_BOOLEAN_ADD_COMPUTED_FIELD = [
-    {
-        'value': 'SHOULD NEVER BE THIS',
-        'boolean': '{TestRound} > 50'
-    },
-    {
-        'value': 'SHOULD BE THIS',
-        'boolean': '{TestRound} < 50 && {TestRound} < 9999999'
-    },
-]
+TEST_BOOLEAN_ADD_COMPUTED_FIELD = {
+    'number': [
+        {
+            'value': 'SHOULD NEVER BE THIS',
+            'boolean': '{TestRound} > 50'
+        },
+        {
+            'value': 'SHOULD BE THIS',
+            'boolean': '{TestRound} < 50 && {TestRound} < 9999999'
+        },
+    ],
+}
 
 TEST_ADD_SCHEMA_METADATA = {
     'resources': ['default'],
@@ -224,12 +226,12 @@ TEST_STEPS = [
                     'target': 'bool_computed_field',
                     'functions': [
                         {
-                            'value': TEST_BOOLEAN_ADD_COMPUTED_FIELD[0]['value'],
-                            'boolean': TEST_BOOLEAN_ADD_COMPUTED_FIELD[0]['boolean'],
+                            'value': TEST_BOOLEAN_ADD_COMPUTED_FIELD['number'][0]['value'],
+                            'boolean': TEST_BOOLEAN_ADD_COMPUTED_FIELD['number'][0]['boolean'],
                         },
                         {
-                            'value': TEST_BOOLEAN_ADD_COMPUTED_FIELD[1]['value'],
-                            'boolean': TEST_BOOLEAN_ADD_COMPUTED_FIELD[1]['boolean'],
+                            'value': TEST_BOOLEAN_ADD_COMPUTED_FIELD['number'][1]['value'],
+                            'boolean': TEST_BOOLEAN_ADD_COMPUTED_FIELD['number'][1]['boolean'],
                         },
                     ],
                 },

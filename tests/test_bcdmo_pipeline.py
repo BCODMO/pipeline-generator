@@ -119,7 +119,7 @@ class TestBcodmoPipeline():
     def test_boolean_add_computed_field(self):
         logger.info('Testing boolean add computed field')
         # Confirm the value was rounded properly
-        assert self.shared_data['first_row'][17] == TEST_BOOLEAN_ADD_COMPUTED_FIELD[1]['value']
+        assert self.shared_data['first_row'][17] == TEST_BOOLEAN_ADD_COMPUTED_FIELD['number'][1]['value']
 
 
     def test_infer_types(self):
