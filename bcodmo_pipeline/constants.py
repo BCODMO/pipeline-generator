@@ -2,6 +2,7 @@ VALID_OBJECTS = {
     'add_resource': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -15,12 +16,14 @@ VALID_OBJECTS = {
     'add_metadata': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
     },
     'set_types': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -42,6 +45,7 @@ VALID_OBJECTS = {
     'concatenate': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -65,6 +69,7 @@ VALID_OBJECTS = {
     'delete_fields': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -76,6 +81,7 @@ VALID_OBJECTS = {
     'sort': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -86,6 +92,7 @@ VALID_OBJECTS = {
     'add_computed_field': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -102,6 +109,7 @@ VALID_OBJECTS = {
     'find_replace': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -116,6 +124,7 @@ VALID_OBJECTS = {
     'bcodmo_pipeline_processors.round_fields': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -130,6 +139,7 @@ VALID_OBJECTS = {
     'bcodmo_pipeline_processors.convert_to_decimal_degrees': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -147,6 +157,7 @@ VALID_OBJECTS = {
     'bcodmo_pipeline_processors.convert_date': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -165,12 +176,14 @@ VALID_OBJECTS = {
     },
     'bcodmo_pipeline_processors.infer_types': {
         'valid_top_keys': [
+            'cache',
             'run',
         ],
     },
     'dump.to_path': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -180,6 +193,7 @@ VALID_OBJECTS = {
     'bcodmo_pipeline_processors.boolean_add_computed_field': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
         'valid_parameter_keys': [
@@ -194,6 +208,7 @@ VALID_OBJECTS = {
     'bcodmo_pipeline_processors.add_schema_metadata': {
         'valid_top_keys': [
             'run',
+            'cache',
             'parameters',
         ],
     },
