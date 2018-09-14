@@ -27,13 +27,17 @@ def modify_datapackage(datapackage_):
     return datapackage_
 
 
-def process_resource(rows):
+def process_resource(rows, missing_data_values):
     for row in rows:
         for field in fields:
             input_field = field['input_field']
             if input_field not in row:
                 raise Exception(f'Input field {input_field} not found in row')
-            row_value = str(row[input_field])
+            row_value = row[input_field]
+            if row_value in missing_data_values or row_value is None:
+                row[field['name']] = row_value
+                continue
+            row_value = str(row_value)
 
             output_field = field['output_field']
             input_format = field['input_format']
@@ -71,7 +75,16 @@ def process_resources(resource_iterator_):
         if not resources.match(spec['name']):
             yield resource
         else:
-            yield process_resource(resource)
+            missing_data_values = ['']
+            for resource_datapackage in datapackage.get('resources', []):
+                if resource_datapackage['name'] == spec['name']:
+                    missing_data_values = resource_datapackage.get(
+                        'schema', {},
+                    ).get(
+                        'missingValues', ['']
+                    )
+                    break
+            yield process_resource(resource, missing_data_values)
 
 
 spew(modify_datapackage(datapackage), process_resources(resource_iterator))

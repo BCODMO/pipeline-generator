@@ -54,6 +54,7 @@ VALID_OBJECTS = {
         'valid_top_keys': [
             'run',
             'parameters',
+            'cache',
         ],
         'valid_parameter_keys': [
             'target',
