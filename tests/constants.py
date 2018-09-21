@@ -85,6 +85,12 @@ TEST_BOOLEAN_ADD_COMPUTED_FIELD = {
     ],
 }
 
+TEST_SPLIT_COLUMNS = {
+    'input_field': 'Species',
+    'output_fields': ['split1', 'split2'],
+    'pattern': '(.*) (.*)',
+}
+
 TEST_ADD_SCHEMA_METADATA = {
     'resources': ['default'],
     'missingKeys': ['nd', ''],
@@ -244,6 +250,16 @@ TEST_STEPS = [
     {
         "run": "bcodmo_pipeline_processors.add_schema_metadata",
         "parameters": TEST_ADD_SCHEMA_METADATA,
+    },
+    {
+        "run": "bcodmo_pipeline_processors.split_column",
+        "parameters": {
+            "fields": [{
+                'input_field': TEST_SPLIT_COLUMNS['input_field'],
+                'output_fields': TEST_SPLIT_COLUMNS['output_fields'],
+                'pattern': TEST_SPLIT_COLUMNS['pattern'],
+            }]
+        },
     },
     {
         "run": "dump.to_path",

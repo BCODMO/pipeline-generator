@@ -61,7 +61,7 @@ class BcodmoPipeline:
         self._confirm_valid(obj)
         self._steps.append(obj)
 
-    def run_pipeline(self, cache_id=None, verbose=False, num_rows=1):
+    def run_pipeline(self, cache_id=None, verbose=False, num_rows=-1):
         '''
         Runs the datapackage pipelines for this pipeline
 

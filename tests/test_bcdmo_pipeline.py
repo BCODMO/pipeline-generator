@@ -83,7 +83,7 @@ class TestBcodmoPipeline():
         assert self.shared_data['datapackage_data']['count_of_rows'] == 24
 
         # The name of the concatenated row
-        assert self.shared_data['second_row'][12] == 'Aannelid Test'
+        assert self.shared_data['second_row'][12] == 'Aannelid Test Value'
 
     def test_delete_fields(self):
         logger.info('Testing delete')
@@ -133,6 +133,11 @@ class TestBcodmoPipeline():
     def test_add_resource_metadata(self):
         resources = self.shared_data['datapackage_data']['resources']
         assert resources[0]['schema']['missingKeys'] == TEST_ADD_SCHEMA_METADATA['missingKeys']
+
+    def test_split_keys(self):
+        resources = self.shared_data['datapackage_data']['resources']
+        assert self.shared_data['first_row'][18] == 'Amage'
+        assert self.shared_data['first_row'][19] == 'sp.'
 
 
 

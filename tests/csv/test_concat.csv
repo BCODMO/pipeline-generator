@@ -1,5 +1,5 @@
 Genomic_Method,Taxon,Species,Lander,Lab_Intenifier,Block_Bone,Individuals,Lat,Long,Depth,TestRound,TestDate,TestDatetime,TestDateYear
-mt_genome,Aannelid,Test,BOWL_3,A3372.2,W25,1,N 47o 16.201,W 127o 35 57,1596m,3.24135,2017-07-03,2017-03-03T11:24:32Z,02-04
+mt_genome,Aannelid,Test Value,BOWL_3,A3372.2,W25,1,N 47o 16.201,W 127o 35 57,1596m,3.24135,2017-07-03,2017-03-03T11:24:32Z,02-04
 ,,,,,,,,,,,,,
 ,,,,,,,,,,,,,
 ,,,,,,,,,,,,,

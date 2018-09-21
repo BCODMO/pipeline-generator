@@ -212,4 +212,20 @@ VALID_OBJECTS = {
             'parameters',
         ],
     },
+    'bcodmo_pipeline_processors.split_column': {
+        'valid_top_keys': [
+            'run',
+            'cache',
+            'parameters',
+        ],
+        'valid_parameter_keys': [
+            'fields',
+            'resources',
+        ],
+        'valid_fields_keys': [
+            'input_field',
+            'output_fields',
+            'pattern'
+        ],
+    },
 }
