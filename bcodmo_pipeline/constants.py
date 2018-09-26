@@ -11,6 +11,7 @@ VALID_OBJECTS = {
             'format',
             'sheet',
             'headers',
+            'skip_rows',
         ],
     },
     'add_metadata': {

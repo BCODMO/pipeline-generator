@@ -34,10 +34,10 @@ def process_resource(rows, missing_data_values):
             row_value = row[input_field]
             output_field = field['output_field']
 
+
             if row_value in missing_data_values or row_value is None:
                 row[output_field] = row_value
                 continue
-
 
             # If directional is user inputted, get it
             directional = 'directional' in field and field['directional']
