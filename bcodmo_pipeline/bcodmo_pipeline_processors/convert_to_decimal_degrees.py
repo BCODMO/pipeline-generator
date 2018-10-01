@@ -38,6 +38,7 @@ def process_resource(rows, missing_data_values):
             if row_value in missing_data_values or row_value is None:
                 row[output_field] = row_value
                 continue
+            row_value = str(row_value)
 
             # If directional is user inputted, get it
             directional = 'directional' in field and field['directional']

@@ -139,8 +139,6 @@ class TestBcodmoPipeline():
         assert self.shared_data['first_row'][18] == 'Amage'
         assert self.shared_data['first_row'][19] == 'sp.'
 
-
-
     def test_run_pipeline(self):
         res = self.pipeline.run_pipeline()
         logger.info(res)
@@ -157,7 +155,6 @@ class TestBcodmoPipeline():
             row = next(reader)
             assert header == res['resources']['default']['header']
             assert row == res['resources']['default']['rows'][0]
-
 
     def teardown_class(self):
         pass
