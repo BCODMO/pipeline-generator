@@ -26,6 +26,25 @@ DAY = 60 * 60 * 24
 
 class BcodmoPipeline:
     def __init__(self, *args, **kwargs):
+        '''
+            Bcodmo pipeline class object
+
+            Two options for initialization
+                - pipeline_spec (string)
+                    A string representing the pipeline-spec.yaml file
+
+                OR
+
+                - name (string)
+                    The name of the pipeline
+                - title (string)
+                    The title of the pipeline
+                - description (string)
+                    The description of the pipeline
+                - steps (list)
+                    A list of steps representing the pipeline
+                    These steps will be validated using the constants.py file
+        '''
         if 'pipeline_spec' in kwargs:
             self.name, self.title, \
                 self.description, self._steps \
@@ -229,6 +248,9 @@ class BcodmoPipeline:
         })
 
     def _parse_pipeline_spec(self, pipeline_spec):
+        '''
+        Parse the pipeline-spec.yaml string that was passed into this class
+        '''
         stream = io.StringIO(pipeline_spec)
         try:
             res = yaml.load(stream)
