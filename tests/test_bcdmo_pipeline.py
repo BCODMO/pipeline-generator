@@ -23,7 +23,7 @@ class TestBcodmoPipeline():
         self.pipeline = BcodmoPipeline(name=TEST_NAME, title=TEST_TITLE, description=TEST_DESCRIPTION)
 
         for step in TEST_STEPS:
-            self.pipeline.add_generic(step)
+            self.pipeline.add_step(step)
 
 
     def test_save(self):

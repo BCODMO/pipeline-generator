@@ -4,10 +4,10 @@ TEST_NAME = 'test-pipeline'
 TEST_TITLE = 'Test Pipeline'
 TEST_DESCRIPTION = 'Testing code to generate pipeline yaml files'
 TEST_PATH = os.environ['TEST_PATH']
-TEST_DATAPACKAGE_URL = TEST_PATH + 'csv/test_data.csv'
+TEST_DATAPACKAGE_URL = TEST_PATH + 'test_data/test_data.csv'
 TEST_CONCAT = {
     'datapackage': {
-        'url': TEST_PATH + 'csv/test_concat.csv',
+        'url': TEST_PATH + 'test_data/test_concat.csv',
         'name': 'concat',
     },
     'fields': {
@@ -267,4 +267,20 @@ TEST_STEPS = [
             "out-path": TEST_SAVE_PATH,
         },
     }
+]
+
+FIXED_WIDTH_TEST_DATA_URL = TEST_PATH + 'test_data/test_data.gof'
+FIXED_WIDTH_TEST_STEPS = [
+    {
+        'run': 'add_resource',
+        'parameters': {
+            'name': 'default',
+            'url': TEST_DATAPACKAGE_URL,
+            'format': 'test',
+        },
+    },
+    {
+        'run': 'stream_remote_resources',
+        'cache': True,
+    },
 ]

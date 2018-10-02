@@ -15,6 +15,7 @@ import yaml
 import re
 
 from .constants import VALID_OBJECTS
+from .parsers import FixedWidthParser
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -56,7 +57,7 @@ class BcodmoPipeline:
             self._steps = []
             if 'steps' in kwargs:
                 for step in kwargs['steps']:
-                    self.add_generic(step)
+                    self.add_step(step)
 
     def save_to_file(self, file_path, steps=None):
         if not steps:
@@ -76,7 +77,7 @@ class BcodmoPipeline:
             }
         }
 
-    def add_generic(self, obj):
+    def add_step(self, obj):
         self._confirm_valid(obj)
         self._steps.append(obj)
 
@@ -108,7 +109,7 @@ class BcodmoPipeline:
         # If the file structure between this file and the tmp folder
         # ever changes this code must change
         file_path = os.path.dirname(os.path.realpath(__file__))
-        os.environ['DPP_PROCESSOR_PATH'] = file_path
+        os.environ['DPP_PROCESSOR_PATH'] = file_path + '/processors'
         path = f'{file_path}/tmp/{cache_id}'
         # Create the directory and file
         if not os.path.exists(path):
