@@ -16,7 +16,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class TestBcodmoPipeline():
+class TestParsers():
 
     def setup_class(self):
         pass
@@ -33,7 +33,13 @@ class TestBcodmoPipeline():
         for step in FIXED_WIDTH_TEST_STEPS:
             pipeline.add_step(step)
         res = pipeline.run_pipeline()
-        logger.info(res)
+        logger.info(res['cache_id'])
+        logger.info(res['resources']['default']['rows'][0])
+        logger.info(res['resources']['default']['header'])
+        assert res['resources']['default']['rows'][0][0] == '2.0'
+        assert res['resources']['default']['rows'][0][1] == '3.0'
+        assert res['resources']['default']['rows'][0][2] == '12.0'
+        assert res['resources']['default']['header'][0] == 'STNNBR nan'
         assert res['status_code'] == 0
 
 

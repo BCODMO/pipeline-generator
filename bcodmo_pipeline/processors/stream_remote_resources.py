@@ -16,6 +16,13 @@ from datapackage_pipelines.utilities.extended_json import json
 from datapackage_pipelines.utilities.resource_matcher import ResourceMatcher
 from datapackage_pipelines.utilities.tabulator_txt_parser import TXTParser
 import logging
+# Import custom parsers here
+from parsers import FixedWidthParser
+
+# Add custom parsers here
+custom_parsers = {
+    'bcodmo.fixedwidth': FixedWidthParser,
+}
 
 def _tostr(value):
     if isinstance(value, str):
@@ -134,11 +141,15 @@ def stream_reader(_resource, _url, _ignore_missing, limit_rows):
                 if format in tabulator.config.SUPPORTED_COMPRESSION:
                     format = None
                 else:
-                    try:
-                        parser_cls = tabulator.helpers.import_attribute(tabulator.config.PARSERS[format])
-                    except KeyError:
-                        logging.error("Unknown format %r", format)
-                        raise
+                    # Import custom parsers first
+                    if format in custom_parsers.keys():
+                        parser_cls = custom_parsers[format]
+                    else:
+                        try:
+                            parser_cls = tabulator.helpers.import_attribute(tabulator.config.PARSERS[format])
+                        except KeyError:
+                            logging.error("Unknown format %r", format)
+                            raise
                     _params.update(
                         dict(x for x in __resource.items()
                              if x[0] in parser_cls.options))
@@ -152,12 +163,19 @@ def stream_reader(_resource, _url, _ignore_missing, limit_rows):
             if format is not None:
                 _params['format'] = format
 
+
             constants = _resource.get('constants', {})
             constant_headers = list(constants.keys())
             constant_values = [constants.get(k) for k in constant_headers]
-            _stream = tabulator.Stream(__url, **_params,
-                                       post_parse=[suffix_remover(format),
-                                                   add_constants(constant_headers, constant_values, _columns)])
+            _stream = tabulator.Stream(
+                __url,
+                **_params,
+                post_parse=[
+                   suffix_remover(format),
+                   add_constants(constant_headers, constant_values, _columns)
+                ],
+                custom_parsers=custom_parsers
+            )
             retry = 0
             backoff = 2
             while True:

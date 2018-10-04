@@ -15,7 +15,6 @@ import yaml
 import re
 
 from .constants import VALID_OBJECTS
-from .parsers import FixedWidthParser
 
 logging.basicConfig(
     level=logging.DEBUG,

@@ -13,6 +13,8 @@ VALID_OBJECTS = {
             'headers',
             'skip_rows',
             'delimiter',
+            'width',
+            'infer',
         ],
     },
     'add_metadata': {
