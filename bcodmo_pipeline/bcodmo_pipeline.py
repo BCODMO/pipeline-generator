@@ -1,273 +1,290 @@
+import csv
+import io
+import json
 import logging
+import os
+import shutil
+from subprocess import (
+    check_output,
+    STDOUT,
+    CalledProcessError,
+)
+import time
+import uuid
+import yaml
+import re
+
+from .constants import VALID_OBJECTS
 
 logging.basicConfig(
     level=logging.DEBUG,
 )
 logger = logging.getLogger(__name__)
 
+# Day in seconds
+DAY = 60 * 60 * 24
+
 class BcodmoPipeline:
-    def __init__(self, name, title, description):
-        name.replace(' ', '-')
-        self.intro = f'''{name}:
-  title: {title}
-  description: {description}
-  pipeline:'''
-        self._steps = []
-        self._resources = []
-
-    def save_to_file(self, file_path):
-        with open(file_path, 'w') as fd:
-            num_chars = fd.write(self.intro + ''.join(self.get_steps()))
-
-    def get_steps(self):
-        string_steps = []
-        for step in self._steps:
-            string_step = self._obj_to_string([step])
-            string_steps.append(string_step)
-        return string_steps
-
-
-    def add_resource(self, url, name='default', stream=True):
-        dict_step = {
-            'run': 'add_resource',
-            'parameters': {
-                'url': url,
-                'name': name,
-            },
-        }
-        self._steps.append(dict_step)
-        self._resources.append(name)
-        if stream:
-            self._stream_remote_resources()
-
-    def concatenate(self, fields, target_name='default', sources=None):
+    def __init__(self, *args, **kwargs):
         '''
-        Concatenate multiple resources together
+            Bcodmo pipeline class object
 
-        - fields is a dictionary of lists where the key is the target column and
-        the list is a list of source columns. Leave list empty for the same column name
-        - target_name is the name of the new resource
-        - sources is the resources to concatenate. Defaults to all the resources
+            Two options for initialization
+                - pipeline_spec (string)
+                    A string representing the pipeline-spec.yaml file
+
+                OR
+
+                - name (string)
+                    The name of the pipeline
+                - title (string)
+                    The title of the pipeline
+                - description (string)
+                    The description of the pipeline
+                - steps (list)
+                    A list of steps representing the pipeline
+                    These steps will be validated using the constants.py file
         '''
-        dict_step = {
-            'run': 'concatenate',
-            'parameters': {
-                'target': {
-                    'name': target_name,
-                    'path': f'data/{target_name}',
-                },
-                'fields': fields,
-            }
-        }
-        if sources:
-            dict_step['parameters']['sources'] = resources
-            self._resources = list(filter(lambda resource: resource in resources, self._resources))
-            self._resources.append(target_name)
+        if 'pipeline_spec' in kwargs:
+            self.name, self.title, \
+                self.description, self._steps \
+                = self._parse_pipeline_spec(kwargs['pipeline_spec'])
         else:
-            self._resources = [target_name]
-        self._steps.append(dict_step)
+            self.name = kwargs['name']
+            self.title = kwargs['title']
+            self.description = kwargs['description']
+            self._steps = []
+            if 'steps' in kwargs:
+                for step in kwargs['steps']:
+                    self.add_step(step)
 
+    def save_to_file(self, file_path, steps=None):
+        if not steps:
+            steps = self._steps
+        with open(file_path, 'w') as fd:
+            num_chars = fd.write(self._get_yaml_format(steps=steps))
 
-    def delete_fields(self, fields, resources=None):
-        '''
-        Delete a list of fields
-        '''
-        dict_step = {
-            'run': 'delete_fields',
-            'parameters': {
-                'fields': fields
+    def get_yaml(self):
+        return self._get_yaml_format()
+
+    def get_object(self):
+        return {
+            self.name: {
+                'title': self.title,
+                'description': self.description,
+                'pipeline': self._steps,
             }
         }
-        if resources:
-            dict_step['parameters']['resources'] = resources
-        self._steps.append(dict_step)
 
-    def sort(self, field, resources=None):
-        dict_step = {
-            'run': 'sort',
-            'parameters': {
-                'resources': resources if resources else self._resources,
-                'sort-by': f'"{{{field}}}"',
+    def add_step(self, obj):
+        self._confirm_valid(obj)
+        self._steps.append(obj)
+
+    def run_pipeline(self, cache_id=None, verbose=False, num_rows=-1):
+        '''
+        Runs the datapackage pipelines for this pipeline
+
+        - On fail, return error message
+        - On success, return datapackage.json contents and the
+        first line of each resulting csv
+
+        - On both fail and success return a status code and a
+        unique id that can be passed back in to this function
+        to use the cache
+        '''
+        if not cache_id:
+            cache_id = str(uuid.uuid1())
+
+        # We have to check the cache_id value since it's
+        # potentially being passed in from the outside
+        pattern = re.compile(
+            r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}'
+            r'-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+        )
+        if not pattern.match(cache_id):
+            raise Exception('The unique ID that was provided was not in uuid format')
+
+        ''' IMPORTANT '''
+        # If the file structure between this file and the tmp folder
+        # ever changes this code must change
+        file_path = os.path.dirname(os.path.realpath(__file__))
+        os.environ['DPP_PROCESSOR_PATH'] = file_path + '/processors'
+        path = f'{file_path}/tmp/{cache_id}'
+        # Create the directory and file
+        if not os.path.exists(path):
+            os.makedirs(path)
+        try:
+            # Create a new save step so we can access the data here
+            new_save_step = {
+                'run': 'dump.to_path',
+                'parameters': {
+                    'out-path': path,
+                }
             }
-        }
-        self._steps.append(dict_step)
+            new_steps = self._steps + [new_save_step]
+            self.save_to_file(f'{path}/pipeline-spec.yaml', steps=new_steps)
 
-    def combine_fields(self, output_field, fields, resources=None):
-        with_string = ' '.join([f'{{{field}}}' for field in fields])
-        dict_step = {
-            'run': 'add_computed_field',
-            'parameters': {
-                'fields': [{
-                    'operation': 'format',
-                    'target': output_field,
-                    'with': f'"{with_string}"',
-                }]
-            }
-        }
-        if resources:
-            dict_step['parameters']['resources'] = resources
-        self._steps.append(dict_step)
+            try:
+                # Remove the data folder
+                shutil.rmtree(f'{path}/data', ignore_errors=True)
+                if verbose:
+                    verbose_string = '--verbose'
+                else:
+                    verbose_string = ''
+                completed_process = check_output(
+                    f'cd {path}/.. && dpp run {verbose_string} ./{cache_id}/{self.name}',
+                    shell=True,
+                    stderr=STDOUT,
+                    universal_newlines=True,
+                )
+            except CalledProcessError as e:
+                return {
+                    'status_code': e.returncode,
+                    'error_text': e.output,
+                    'cache_id': cache_id,
+                }
 
-    def round_field(
-        self,
-        field,
-        digits,
-        resources=None,
-        custom_processor='bcodmo-pipeline-processors.round_fields'
-    ):
-        '''
-        Round a field
+            with open(f'{path}/datapackage.json') as f:
+                datapackage = json.load(f)
 
-        Takes in the field name and the number of digits to round to
+            resources = {}
+            # Go through all of outputted data
+            data_folder = f'{path}/data'
+            if os.path.exists(data_folder):
+                for fname in os.listdir(data_folder):
+                    resource_name, ext = os.path.splitext(fname)
+                    # TODO support json format?
+                    if ext != '.csv':
+                        raise Exception(f'Non csv formats are not supported: {fname}')
+                    data_file_path = f'{data_folder}/{fname}'
+                    with open(data_file_path) as f:
+                        reader = csv.reader(f)
+                        header = next(reader)
+                        rows = []
+                        try:
+                            if num_rows >= 0:
+                                for i in range(num_rows):
+                                    rows.append(next(reader))
+                            else:
+                                while True:
+                                    row = next(reader)
+                                    rows.append(row)
+                        except StopIteration:
+                            pass
+                        resources[resource_name] = {
+                            'header': header,
+                            'rows': rows,
+                        }
 
-        The pipeline will throw an error if the field cannot be converted to a float
-        '''
-        dict_step = {
-            'run': custom_processor,
-            'parameters': {
-                'fields': [{
-                    'name': field,
-                    'digits': digits,
-                }]
-            }
-        }
-        if resources:
-            dict_step['parameters']['resources'] = resources
-        self._steps.append(dict_step)
-
-    def convert_field_decimal_degrees(
-        self,
-        input_field,
-        output_field,
-        input_format,
-        pattern,
-        directional=None,
-        resources=None,
-        custom_processor='bcodmo-pipeline-processors.convert_to_decimal_degrees'
-    ):
-        '''
-        Convert a field to decimal degrees and saves in a new field
-
-        Takes multiple formats for the input string:
-           degrees-minutes-seconds - degrees, minutes, seconds
-           degrees-decimal_minutes - degress, decimal minutes
-
-        The pattern is defined with %parameter% values, ex:
-          "sometext%degrees% and%minutes% othertext%seconds%moretext"
-
-        If %directional% is not defined in the pattern it must be defined as an input
-        This is not checked in this function, rather in the pipeline
-        '''
-        dict_step = {
-            'run': custom_processor,
-            'parameters': {
-                'fields': [{
-                    'input_field': input_field,
-                    'output_field': output_field,
-                    'format': f'"{input_format}"',
-                    'pattern': f'"{pattern}"',
-                }]
-            }
-        }
-        if resources:
-            dict_step['parameters']['resources'] = resources
-        if directional:
-            dict_step['parameters']['fields']['directional'] = f'"{directional}"'
-        self._steps.append(dict_step)
-
-    def convert_date(
-        self,
-        input_field,
-        output_field,
-        input_format,
-        input_timezone=None,
-        output_format='%Y-%m-%dT%H:%M:%SZ',
-        output_timezone='UTC',
-        year=None,
-        custom_processor='bcodmo-pipeline-processors.convert_date',
-        resources=None,
-    ):
-        '''
-        Convert a date with a given format to some output format
-
-        If the date string does not contain timezone information
-        input_timezone must be included (this is only enforced by the pipeline)
-        '''
-        dict_step = {
-            'run': custom_processor,
-            'parameters': {
-                'fields': [{
-                    'input_field': f'"{input_field}"',
-                    'input_format': f'"{input_format}"',
-                    'output_field': f'"{output_field}"',
-                    'output_format': f'"{output_format}"',
-                    'output_timezone': f'"{output_timezone}"',
-                }],
-            }
-        }
-        if input_timezone:
-            dict_step['parameters']['fields'][0]['input_timezone'] = f'"{input_timezone}"'
-        if year:
-            dict_step['parameters']['fields'][0]['year'] = f'"{year}"'
-        if resources:
-            dict_step['parameters']['resources'] = resources
-        self._steps.append(dict_step)
-
-
-
-    def infer_types(
-        self,
-        custom_processor='bcodmo-pipeline-processors.infer_types',
-        resources=None,
-    ):
-        dict_step = {'run': custom_processor}
-        if resources:
-            dict_step['parameters'] = {
+            return {
+                'status_code': 0,
+                'cache_id': cache_id,
+                'datapackage': datapackage,
                 'resources': resources,
             }
-        self._steps.append(dict_step)
+        finally:
+            try:
+                # Clean up the directory, deleting old folders
+                cur_time = time.time()
+                dirs = [
+                    folder_name for folder_name in os.listdir(f'{file_path}/tmp')
+                    if not folder_name.startswith('.')
+                ]
+                for folder_name in dirs:
+                    folder = f'{file_path}/tmp/{folder_name}'
+                    st = os.stat(folder)
+                    modified_time = st.st_mtime
+                    age = cur_time - modified_time
+
+                    if age > DAY:
+                        shutil.rmtree(folder)
+            except Exception as e:
+                logger.info(f'There was an error trying to clean up folder: {str(e)}')
+                logger.error(vars(e))
+
+    def _confirm_valid(self, obj):
+        ''' Confirm that an object is valid in the pipeline '''
+        if type(obj) != dict:
+            raise Exception('Object must be a dictionary')
+
+        # Confirm that the processor name is correct
+        proc_name = obj['run']
+        if proc_name not in VALID_OBJECTS.keys():
+            raise Exception(f'{proc_name} is not a valid processor name')
+        rules = VALID_OBJECTS[proc_name]
+
+        # Confirm validity of top level keys
+        for key in obj.keys():
+            if key not in rules['valid_top_keys']:
+                raise Exception(f'{key} not a valid top level key for {proc_name}')
+
+        # Confirm validity of parameters keys
+        if 'valid_parameter_keys' in rules and 'parameters' in obj:
+            for param_key in obj['parameters'].keys():
+                if param_key not in rules['valid_parameter_keys']:
+                    raise Exception(
+                        f'{param_key} not a valid parameter key for {proc_name}'
+                    )
+
+        # Confirm validity of fields keys
+        if 'valid_fields_keys' in rules and 'fields' in obj['parameters']:
+            for field in obj['parameters']['fields']:
+                for fields_key in field.keys():
+                    if fields_key not in rules['valid_fields_keys']:
+                        raise Exception(f'{fields_key} not a valid fields key for {proc_name}')
+
+        return True
 
 
-
-    def save_datapackage(self, path):
-        dict_step = {
-            'run': 'dump.to_path',
-            'parameters': {
-                'out-path': path,
+    def _get_yaml_format(self, steps=None):
+        if not steps:
+            steps = self._steps
+        return yaml.dump({
+            self.name: {
+                'title': self.title,
+                'description': self.description,
+                'pipeline': steps,
             }
-        }
-        self._steps.append(dict_step)
+        })
 
-    def _stream_remote_resources(self):
-        dict_step = {
-            'run': 'stream_remote_resources',
-            'cache': True,
-        }
-        self._steps.append(dict_step)
-
-    def _obj_to_string(self, obj, depth=2):
+    def _parse_pipeline_spec(self, pipeline_spec):
         '''
-        A recursive function that generates proper yaml format
-        given an object
+        Parse the pipeline-spec.yaml string that was passed into this class
         '''
+        stream = io.StringIO(pipeline_spec)
+        try:
+            res = yaml.load(stream)
 
-        # Handle list case
-        if type(obj) == list:
-            if len(obj) == 0:
-                return ' []'
-            return ''.join([
-                f'''
-{'  ' * depth}-{self._obj_to_string(step, depth + 1)}'''
-                for step in obj
-            ])
+            # Get the name
+            if type(res) != dict or len(res.keys()) != 1:
+                raise Exception('Improperly formatted pipeline-spec.yaml file - must have a single key dictionary as the root')
+            name = list(res.keys())[0]
 
-        # Handle dictionary case
-        if type(obj) == dict:
-            return ''.join([
-                f'''
-{'  ' * depth}{key}:{self._obj_to_string(value, depth + 1)}'''
-                for key, value in obj.items()
-            ])
+            # Get the title
+            if 'title' not in res[name]:
+                raise Exception('Title not found while parsing file')
+            # Get the description
+            if 'description' not in res[name]:
+                raise Exception('Description not found while parsing file')
+            title = res[name]['title']
+            description = res[name]['description']
 
-        # Base case where the value is not a list or a dict
-        return f' {obj}'
+            # Get the pipeline
+            if 'pipeline' not in res[name]:
+                raise Exception('Pipeline not found while parsing file')
+            pipeline = res[name]['pipeline']
+
+            # Parse the pipeline
+            if not type(pipeline) == list:
+                raise Exception('Pipeline in file must be a list')
+            steps = []
+            for step in pipeline:
+                steps.append(step)
+
+
+
+
+        except yaml.YAMLError as e:
+            raise e
+        return name, title, description, steps
+

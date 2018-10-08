@@ -1,21 +1,18 @@
-import os
 from setuptools import setup, find_packages
 
-here = os.path.abspath(os.path.dirname(__file__))
+required = [
+    'PyYAML==3.13',
+    'datapackage-pipelines==1.7.1',
+]
 
-about = {}
-with open(os.path.join(here, "bcodmo-pipeline", "__version__.py")) as f:
-    exec(f.read(), about)
-
-required = []
 
 setup(
-    name='bpvalve',
-    version=about['__version__'],
+    name='pipeline-generator',
+    version='v0.0.1dev',
     description='BCODMO Pipelines Library',
     author='BCODMO',
-    author_email='admin@blocpower.org',
-    url='https://github.com/Blocp/bpvalve',
+    author_email='cschloer@whoi.edu',
+    url='https://github.com/bcodmo/pipeline-generator',
     packages=find_packages(),
     install_requires=required,
     include_package_data=True,

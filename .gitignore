@@ -108,3 +108,8 @@ tests/data
 
 # dpp files
 .dpp
+
+# yaml files
+*.yaml
+
+*/tmp/*

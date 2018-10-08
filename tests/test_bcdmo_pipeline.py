@@ -3,7 +3,8 @@ import io
 import json
 import logging
 import os
-from subprocess import run, PIPE
+from subprocess import run
+import yaml
 
 from bcodmo_pipeline import BcodmoPipeline
 from .constants import *
@@ -18,138 +19,26 @@ logger = logging.getLogger(__name__)
 class TestBcodmoPipeline():
 
     def setup_class(self):
-        self.pipeline = BcodmoPipeline(TEST_NAME, TEST_TITLE, TEST_DESCRIPTION)
+        self.shared_data = {}
+        self.pipeline = BcodmoPipeline(name=TEST_NAME, title=TEST_TITLE, description=TEST_DESCRIPTION)
 
-    def test_add_resource(self):
-        logger.info('Testing add resource')
-        self.pipeline.add_resource(TEST_DATAPACKAGE_URL)
-        steps = self.pipeline.get_steps()
+        for step in TEST_STEPS:
+            self.pipeline.add_step(step)
 
-        assert steps[len(steps) - 2] == EXPECTED_STEPS[len(steps) - 2]
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-    def test_concatenate(self):
-        logger.info('Testing concatenating resources')
-        self.pipeline.add_resource(
-            TEST_CONCAT['datapackage']['url'],
-            name=TEST_CONCAT['datapackage']['name'],
-        )
-        self.pipeline.concatenate(TEST_CONCAT['fields'])
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-    def test_delete_fields(self):
-        logger.info('Testing delete fields')
-        self.pipeline.delete_fields(TEST_DELETE_FIELDS)
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-    def test_sort_field(self):
-        logger.info('Testing sort field')
-        self.pipeline.sort(TEST_SORT_FIELD)
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-    def test_combine_fields(self):
-        logger.info('Testing combine fields')
-        self.pipeline.combine_fields(
-            TEST_COMBINE_FIELDS['output_field'],
-            TEST_COMBINE_FIELDS['fields'],
-        )
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-    def test_round_field(self):
-        logger.info('Testing round field')
-        self.pipeline.round_field(
-            TEST_ROUND_FIELD['field'],
-            TEST_ROUND_FIELD['digits'],
-        )
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-    def test_convert_field_decimal_degrees(self):
-        logger.info('Testing convert field to decimal degrees')
-        self.pipeline.convert_field_decimal_degrees(
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['input_field'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['output_field'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['format'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DD['pattern'],
-        )
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-        self.pipeline.convert_field_decimal_degrees(
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['input_field'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['output_field'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['format'],
-            TEST_CONVERT_FIELD_DECIMAL_DEGREES_FROM_DMS['pattern'],
-        )
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-    def test_convert_date(self):
-        logger.info('Testing convert datetime')
-        self.pipeline.convert_date(
-            TEST_CONVERT_DATE_DATE['input_field'],
-            TEST_CONVERT_DATE_DATE['output_field'],
-            TEST_CONVERT_DATE_DATE['input_format'],
-            input_timezone=TEST_CONVERT_DATE_DATE['input_timezone'],
-            output_format=TEST_CONVERT_DATE_DATE['output_format'],
-            output_timezone=TEST_CONVERT_DATE_DATE['output_timezone'],
-        )
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-        self.pipeline.convert_date(
-            TEST_CONVERT_DATE_MONTH_DAY['input_field'],
-            TEST_CONVERT_DATE_MONTH_DAY['output_field'],
-            TEST_CONVERT_DATE_MONTH_DAY['input_format'],
-            input_timezone=TEST_CONVERT_DATE_DATE['input_timezone'],
-            year=TEST_CONVERT_DATE_MONTH_DAY['year'],
-        )
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-    def test_infer_types(self):
-        logger.info('Testing infer types')
-        self.pipeline.infer_types()
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
-
-    def test_save_datapackage(self):
-        logger.info('Testing saving to datapackage step')
-        self.pipeline.save_datapackage(TEST_SAVE_PATH)
-
-        steps = self.pipeline.get_steps()
-        assert steps[len(steps) - 1] == EXPECTED_STEPS[len(steps) - 1]
 
     def test_save(self):
         '''
         Make sure the pipeline-spec.yaml file is succesfully saved to disc
         '''
-        logger.info('Testing save')
+        logger.info('Testing save pipeline-spec.yaml file')
+        fname = TEST_SAVE_PATH + 'pipeline-spec.yaml'
 
-        # Clear the file
-        fd = open(TEST_SAVE_PATH + 'pipeline-spec.yaml', 'w')
-        fd.write('')
-        fd.close()
+        # Remove the file
+        os.remove(fname)
 
         # Save to the file
         self.pipeline.save_to_file(TEST_SAVE_PATH + 'pipeline-spec.yaml')
-        with open(TEST_SAVE_PATH + 'pipeline-spec.yaml', 'r') as fd:
-            file_contents = fd.read()
-        assert file_contents == EXPECTED_INTRO + ''.join(EXPECTED_STEPS)
+        assert os.path.isfile(fname)
 
     def test_dpp(self):
         '''
@@ -163,7 +52,6 @@ class TestBcodmoPipeline():
             os.remove(TEST_SAVE_PATH + 'datapackage.json')
         if os.path.isfile(TEST_SAVE_PATH + 'data/default.csv'):
             os.remove(TEST_SAVE_PATH + 'data/default.csv')
-        self.pipeline.save_to_file(TEST_SAVE_PATH + 'pipeline-spec.yaml')
 
         # Call dpp
         completed_process = run(
@@ -175,56 +63,112 @@ class TestBcodmoPipeline():
         assert os.path.isfile(TEST_SAVE_PATH + 'datapackage.json')
         assert os.path.isfile(TEST_SAVE_PATH + 'data/default.csv')
 
-
-        # Test metadata
+    def test_setup_obj(self):
+        ''' Set up the objects for the rest of the tests to use '''
         with open(TEST_SAVE_PATH + 'datapackage.json') as f:
             data = json.load(f)
+            self.shared_data['datapackage_data'] = data
+            self.shared_data['fields'] = data['resources'][0]['schema']['fields']
 
-        assert data['count_of_rows'] == 24
-        assert len(data['resources'][0]['schema']['fields']) == 17
-        assert data['resources'][0]['schema']['fields'][12]['name'] == 'Taxon-Species'
-        # Confirm lat was typed correctly
-        assert data['resources'][0]['schema']['fields'][13]['name'] == 'Lat-converted'
-        assert data['resources'][0]['schema']['fields'][13]['type'] == 'number'
-        # Confirm long was typed correctly
-        assert data['resources'][0]['schema']['fields'][14]['name'] == 'Long-converted'
-        assert data['resources'][0]['schema']['fields'][14]['type'] == 'number'
-
-        # Confirm that date was typed properly
-        assert data['resources'][0]['schema']['fields'][9]['name'] == 'TestDate'
-        assert data['resources'][0]['schema']['fields'][9]['type'] == 'date'
-
-        # Confirm that datetime was typed properly
-        assert data['resources'][0]['schema']['fields'][10]['name'] == 'TestDatetime'
-        assert data['resources'][0]['schema']['fields'][10]['type'] == 'datetime'
-        assert data['resources'][0]['schema']['fields'][15]['type'] == 'datetime'
-
-        # Test CSV values
         with open(TEST_SAVE_PATH + '/data/default.csv') as f:
             reader = csv.reader(f)
-            counter = 0
-            next(reader)  # Get past the header row
+            next(reader)
+            self.shared_data['first_row'] = next(reader)
+            self.shared_data['second_row'] = next(reader)
 
-            # Use the first row
+    def test_concatenate(self):
+        logger.info('Testing concatenate')
+
+        # Original file had 23 rows, add an extra row with concatenate
+        assert self.shared_data['datapackage_data']['count_of_rows'] == 24
+
+        # The name of the concatenated row
+        assert self.shared_data['second_row'][12] == 'Aannelid Test Value'
+
+    def test_delete_fields(self):
+        logger.info('Testing delete')
+        assert self.shared_data['fields'][3]['name'] != 'Lander'
+        assert self.shared_data['fields'][5]['name'] != 'Block Bone'
+
+    def test_sort_field(self):
+        logger.info('Testing sort')
+        assert self.shared_data['first_row'][12] == 'AAAAnnelid Amage sp.'
+
+    def test_combine_fields(self):
+        logger.info('Testing combine fields')
+        assert self.shared_data['fields'][12]['name'] == 'Taxon-Species'
+
+    def test_round_field(self):
+        logger.info('Testing round field')
+        # Confirm the value was rounded properly
+        assert self.shared_data['first_row'][8] == '3.24'
+
+    def test_convert_field_decimal_degrees(self):
+        logger.info('Testing convert field to decimal degrees')
+        # Confirm lat was succesfully converted
+        assert self.shared_data['first_row'][13] == '47.27001666666666324090328998863697052001953125'
+        # Confirm long was succesfully converted
+        assert self.shared_data['first_row'][14] == '-127.599166666666661740237032063305377960205078125'
+
+    def test_convert_date(self):
+        logger.info('Testing convert datetime')
+        # Confirm that the datetime was succesfully converted
+        assert self.shared_data['first_row'][15] == '2017-07-14 04:00:00'
+        assert self.shared_data['first_row'][16] == '2015-04-16 04:56:00'
+
+    def test_boolean_add_computed_field(self):
+        logger.info('Testing boolean add computed field')
+        # Confirm the value was rounded properly
+        assert self.shared_data['first_row'][17] == TEST_BOOLEAN_ADD_COMPUTED_FIELD['number'][1]['value']
+
+
+    def test_infer_types(self):
+        logger.info('Testing infer types')
+        assert self.shared_data['fields'][13]['type'] == 'number'
+        assert self.shared_data['fields'][14]['type'] == 'number'
+        assert self.shared_data['fields'][9]['type'] == 'date'
+        assert self.shared_data['fields'][10]['type'] == 'datetime'
+        assert self.shared_data['fields'][15]['type'] == 'datetime'
+
+    def test_add_resource_metadata(self):
+        resources = self.shared_data['datapackage_data']['resources']
+        assert resources[0]['schema']['missingKeys'] == TEST_ADD_SCHEMA_METADATA['missingKeys']
+
+    def test_split_keys(self):
+        resources = self.shared_data['datapackage_data']['resources']
+        assert self.shared_data['first_row'][18] == 'Amage'
+        assert self.shared_data['first_row'][19] == 'sp.'
+
+    def test_run_pipeline(self):
+        res = self.pipeline.run_pipeline()
+        logger.info(res)
+        assert res['status_code'] == 0
+        # Assert that the datapackage is the same
+        with open(TEST_SAVE_PATH + 'datapackage.json') as f:
+            data = json.load(f)
+            assert data == res['datapackage']
+
+        # Assert that the first line is the same
+        with open(TEST_SAVE_PATH + '/data/default.csv') as f:
+            reader = csv.reader(f)
+            header = next(reader)
             row = next(reader)
-            # Confirm we are in the correct row
-            assert row[12] == 'AAAAnnelid Amage sp.'
-            # Confirm the value was rounded properly
-            assert row[8] == '3.24'
-            # Confirm lat was succesfully converted
-            assert row[13] == '47.27001666666666324090328998863697052001953125'
-            # Confirm long was succesfully converted
-            assert row[14] == '-127.599166666666661740237032063305377960205078125'
-            # Confirm that the datetime was succesfully converted
-            assert row[15] == '2017-07-14 04:00:00'
-
-            # Test the second row to confirm concat worked
-            row = next(reader)
-            assert row[12] == 'Aannelid Test'
-
-
+            assert header == res['resources']['default']['header']
+            assert row == res['resources']['default']['rows'][0]
 
     def teardown_class(self):
-        logger.info(self.pipeline.intro + ''.join(self.pipeline.get_steps()))
+        pass
+
+def test_parse_pipeline_spec():
+    with open(TEST_PATH + 'pipeline-spec-test.yaml', 'r') as fd:
+        file_contents = fd.read()
+        file_contents_obj = yaml.load(file_contents)
+    pipeline = BcodmoPipeline(pipeline_spec=file_contents)
+    pipeline.save_to_file(TEST_SAVE_PATH + 'pipeline-spec-test-copy.yaml')
+    with open(TEST_SAVE_PATH + 'pipeline-spec-test-copy.yaml', 'r') as fd:
+        new_file_contents_obj = yaml.load(fd.read())
+
+        assert new_file_contents_obj == file_contents_obj
 
 #TODO Write tests for all lat lon formats
+
