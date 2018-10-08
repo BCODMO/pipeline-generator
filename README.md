@@ -14,6 +14,6 @@ TEST_PATH=/Path/To/tests/
 DPP_PROCESSOR_PATH=/Path/To/Processor/Submodule
 ```
 
-Processor submodule should simply be in `./bcodmo_pipeline` (but you should write out the whole path)
+Processor submodule should simply be in `./bcodmo_pipeline/processors` (but you should write out the whole path)
 
 Run `pytest`
