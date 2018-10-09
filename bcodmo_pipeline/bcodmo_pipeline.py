@@ -206,8 +206,8 @@ class BcodmoPipeline:
             raise Exception('Object must be a dictionary')
 
         # Confirm that the processor name is correct
-        if 'run' not in obj or len(obj.keys()) != 1:
-            raise Exception(f'"run" must be the sole key of the step object: {obj.keys()}')
+        if 'run' not in obj:
+            raise Exception(f'"run" must be a key of the step object: {obj.keys()}')
         return True
 
 
