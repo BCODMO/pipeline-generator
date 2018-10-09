@@ -14,8 +14,6 @@ import uuid
 import yaml
 import re
 
-from .constants import VALID_OBJECTS
-
 logging.basicConfig(
     level=logging.DEBUG,
 )
@@ -208,31 +206,8 @@ class BcodmoPipeline:
             raise Exception('Object must be a dictionary')
 
         # Confirm that the processor name is correct
-        proc_name = obj['run']
-        if proc_name not in VALID_OBJECTS.keys():
-            raise Exception(f'{proc_name} is not a valid processor name')
-        rules = VALID_OBJECTS[proc_name]
-
-        # Confirm validity of top level keys
-        for key in obj.keys():
-            if key not in rules['valid_top_keys']:
-                raise Exception(f'{key} not a valid top level key for {proc_name}')
-
-        # Confirm validity of parameters keys
-        if 'valid_parameter_keys' in rules and 'parameters' in obj:
-            for param_key in obj['parameters'].keys():
-                if param_key not in rules['valid_parameter_keys']:
-                    raise Exception(
-                        f'{param_key} not a valid parameter key for {proc_name}'
-                    )
-
-        # Confirm validity of fields keys
-        if 'valid_fields_keys' in rules and 'fields' in obj['parameters']:
-            for field in obj['parameters']['fields']:
-                for fields_key in field.keys():
-                    if fields_key not in rules['valid_fields_keys']:
-                        raise Exception(f'{fields_key} not a valid fields key for {proc_name}')
-
+        if 'run' not in obj or len(obj.keys()) != 1:
+            raise Exception(f'"run" must be the sole key of the step object: {obj.keys()}')
         return True
 
 
