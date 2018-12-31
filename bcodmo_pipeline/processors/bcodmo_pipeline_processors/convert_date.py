@@ -1,5 +1,6 @@
 from datapackage_pipelines.wrapper import ingest, spew
-from datapackage_pipelines.utilities.resource_matcher import ResourceMatcher
+#from datapackage_pipelines.utilities.resource_matcher import ResourceMatcher
+from dataflows.helpers.resource_matcher import ResourceMatcher
 from datetime import datetime
 import logging
 import pytz
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 parameters, datapackage, resource_iterator = ingest()
 
-resources = ResourceMatcher(parameters.get('resources'))
+resources = ResourceMatcher(parameters.get('resources'), datapackage)
 fields = parameters.get('fields', [])
 
 def modify_datapackage(datapackage_):

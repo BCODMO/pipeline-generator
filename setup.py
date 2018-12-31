@@ -2,7 +2,8 @@ from setuptools import setup, find_packages
 
 required = [
     'PyYAML==3.13',
-    'datapackage-pipelines==1.7.1',
+    'datapackage-pipelines==2.0.0',
+    'dataflows=1.5.0'
 ]
 
 

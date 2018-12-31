@@ -13,7 +13,7 @@ from datapackage_pipelines.wrapper import ingest, spew
 from datapackage_pipelines.utilities.resources import streamable, PATH_PLACEHOLDER, get_path, \
     PROP_STREAMED_FROM, PROP_STREAMING, streaming
 from datapackage_pipelines.utilities.extended_json import json
-from datapackage_pipelines.utilities.resource_matcher import ResourceMatcher
+from dataflows.helpers.resource_matcher import ResourceMatcher
 from datapackage_pipelines.utilities.tabulator_txt_parser import TXTParser
 import logging
 # Import custom parsers here
@@ -228,7 +228,7 @@ def stream_reader(_resource, _url, _ignore_missing, limit_rows):
 
 parameters, datapackage, resource_iterator = ingest()
 
-resources = ResourceMatcher(parameters.get('resources'))
+resources = ResourceMatcher(parameters.get('resources'), datapackage)
 ignore_missing = parameters.get('ignore-missing', False)
 limit_rows = parameters.get('limit-rows', -1)
 
