@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 required = [
-    'PyYAML==3.13',
+    'PyYAML==4.2b1',
     'datapackage-pipelines==1.7.1',
 ]
 
