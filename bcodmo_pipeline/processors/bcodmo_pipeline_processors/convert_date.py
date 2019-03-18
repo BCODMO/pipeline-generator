@@ -1,5 +1,5 @@
 from datapackage_pipelines.wrapper import ingest, spew
-from datapackage_pipelines.utilities.resource_matcher import ResourceMatcher
+from dataflows.helpers.resource_matcher import ResourceMatcher
 from datetime import datetime
 import logging
 import pytz
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 parameters, datapackage, resource_iterator = ingest()
 
-resources = ResourceMatcher(parameters.get('resources'))
+resources = ResourceMatcher(parameters.get('resources'), datapackage)
 fields = parameters.get('fields', [])
 
 def modify_datapackage(datapackage_):
@@ -34,8 +34,9 @@ def process_resource(rows, missing_data_values):
             if input_field not in row:
                 raise Exception(f'Input field {input_field} not found in row')
             row_value = row[input_field]
+
             if row_value in missing_data_values or row_value is None:
-                row[field['name']] = row_value
+                row[input_field] = row_value
                 continue
             row_value = str(row_value)
 

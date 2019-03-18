@@ -1,3 +1,4 @@
-PyYAML==3.13
-datapackage-pipelines==1.7.1
+PyYAML==4.2b1
+datapackage-pipelines==2.1.1
 pyparsing==2.2.0
+python-dateutil==2.7.3

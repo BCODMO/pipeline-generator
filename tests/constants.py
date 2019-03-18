@@ -59,7 +59,7 @@ TEST_CONVERT_DATE_DATE = {
     'input_format': '%Y-%m-%d',
     'input_timezone': 'US/Eastern',
     'output_field': 'TestDateConverted',
-    'output_format': '%Y-%m-%dT%H:%M:%SZ',
+    'output_format': '%Y-%m-%d %H:%M:%S',
     'output_timezone': 'UTC',
 }
 TEST_CONVERT_DATE_MONTH_DAY = {
@@ -67,7 +67,7 @@ TEST_CONVERT_DATE_MONTH_DAY = {
     'input_format': '%m-%d',
     'input_timezone': 'US/Eastern',
     'output_field': 'TestDateYearConverted',
-    'output_format': '%Y-%m-%dT%H:%M:%SZ',
+    'output_format': '%Y-%m-%d %H:%M:%S',
     'output_timezone': 'UTC',
     'year': 2015,
 }
@@ -94,31 +94,39 @@ TEST_SPLIT_COLUMNS = {
 TEST_ADD_SCHEMA_METADATA = {
     'resources': ['default'],
     'missingKeys': ['nd', ''],
+    'missingValues': ['nd', ''],
 }
 
 TEST_SAVE_PATH = TEST_PATH + 'data/'
 
 TEST_STEPS = [
+#    {
+#        "run": "add_resource",
+#        "parameters": {
+#            "name": "default",
+#            "url": TEST_DATA_URL,
+#        },
+#    },
+#    {
+#        "run": "stream_remote_resources",
+#        "cache": True,
+#    },
     {
-        "run": "add_resource",
+        "run": "load",
         "parameters": {
             "name": "default",
-            "url": TEST_DATA_URL,
+            "from": TEST_DATA_URL,
+            "validate": False,
         },
-    },
-    {
-        "run": "stream_remote_resources",
         "cache": True,
     },
     {
-        "run": "add_resource",
+        "run": "load",
         "parameters": {
             "name": TEST_CONCAT['datapackage']['name'],
-            "url": TEST_CONCAT['datapackage']['url'],
+            "from": TEST_CONCAT['datapackage']['url'],
+            "validate": False,
         },
-    },
-    {
-        "run": "stream_remote_resources",
         "cache": True,
     },
     {
@@ -244,9 +252,9 @@ TEST_STEPS = [
             ],
         },
     },
-    {
-        "run": "bcodmo_pipeline_processors.infer_types",
-    },
+    #{
+    #    "run": "bcodmo_pipeline_processors.infer_types",
+    #},
     {
         "run": "bcodmo_pipeline_processors.add_schema_metadata",
         "parameters": TEST_ADD_SCHEMA_METADATA,
@@ -262,7 +270,7 @@ TEST_STEPS = [
         },
     },
     {
-        "run": "dump.to_path",
+        "run": "dump_to_path",
         "parameters": {
             "out-path": TEST_SAVE_PATH,
         },

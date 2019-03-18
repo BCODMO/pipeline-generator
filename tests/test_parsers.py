@@ -33,6 +33,7 @@ class TestParsers():
         for step in FIXED_WIDTH_TEST_STEPS:
             pipeline.add_step(step)
         res = pipeline.run_pipeline()
+        logger.info(res)
         logger.info(res['cache_id'])
         logger.info(res['resources']['default']['rows'][0])
         logger.info(res['resources']['default']['header'])

@@ -2,10 +2,10 @@ from datetime import datetime
 from itertools import chain
 import logging
 import re
+from dataflows.helpers.resource_matcher import ResourceMatcher
 
 from datapackage_pipelines.wrapper import ingest, spew
 from datapackage_pipelines.wrapper.input_processor import ResourceIterator
-from datapackage_pipelines.utilities.resource_matcher import ResourceMatcher
 import tableschema
 logging.basicConfig(
     level=logging.WARNING,
@@ -125,7 +125,7 @@ for resource in resource_iterator:
 
 resource_iterator = iter(resources_list)
 
-resources = ResourceMatcher(parameters.get('resources'))
+resources = ResourceMatcher(parameters.get('resources'), datapackage)
 
 
 

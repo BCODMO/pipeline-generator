@@ -14,8 +14,6 @@ import uuid
 import yaml
 import re
 
-from .constants import VALID_OBJECTS
-
 logging.basicConfig(
     level=logging.DEBUG,
 )
@@ -110,15 +108,16 @@ class BcodmoPipeline:
         file_path = os.path.dirname(os.path.realpath(__file__))
         os.environ['DPP_PROCESSOR_PATH'] = file_path + '/processors'
         path = f'{file_path}/tmp/{cache_id}'
+        results_folder = f'{path}/results'
         # Create the directory and file
         if not os.path.exists(path):
             os.makedirs(path)
         try:
             # Create a new save step so we can access the data here
             new_save_step = {
-                'run': 'dump.to_path',
+                'run': 'dump_to_path',
                 'parameters': {
-                    'out-path': path,
+                    'out-path': results_folder,
                 }
             }
             new_steps = self._steps + [new_save_step]
@@ -144,19 +143,22 @@ class BcodmoPipeline:
                     'cache_id': cache_id,
                 }
 
-            with open(f'{path}/datapackage.json') as f:
+            with open(f'{results_folder}/datapackage.json') as f:
                 datapackage = json.load(f)
 
             resources = {}
             # Go through all of outputted data
-            data_folder = f'{path}/data'
-            if os.path.exists(data_folder):
-                for fname in os.listdir(data_folder):
+            if os.path.exists(results_folder):
+                for fname in [f for f in os.listdir(results_folder)
+                    if os.path.isfile(os.path.join(results_folder, f))
+                ]:
+                    if fname == 'datapackage.json':
+                        continue
                     resource_name, ext = os.path.splitext(fname)
                     # TODO support json format?
                     if ext != '.csv':
                         raise Exception(f'Non csv formats are not supported: {fname}')
-                    data_file_path = f'{data_folder}/{fname}'
+                    data_file_path = f'{results_folder}/{fname}'
                     with open(data_file_path) as f:
                         reader = csv.reader(f)
                         header = next(reader)
@@ -187,7 +189,7 @@ class BcodmoPipeline:
                 # Clean up the directory, deleting old folders
                 cur_time = time.time()
                 dirs = [
-                    folder_name for folder_name in os.listdir(f'{file_path}/tmp')
+                    folder_name for folder_name in listdir(f'{file_path}/tmp')
                     if not folder_name.startswith('.')
                 ]
                 for folder_name in dirs:
@@ -208,31 +210,8 @@ class BcodmoPipeline:
             raise Exception('Object must be a dictionary')
 
         # Confirm that the processor name is correct
-        proc_name = obj['run']
-        if proc_name not in VALID_OBJECTS.keys():
-            raise Exception(f'{proc_name} is not a valid processor name')
-        rules = VALID_OBJECTS[proc_name]
-
-        # Confirm validity of top level keys
-        for key in obj.keys():
-            if key not in rules['valid_top_keys']:
-                raise Exception(f'{key} not a valid top level key for {proc_name}')
-
-        # Confirm validity of parameters keys
-        if 'valid_parameter_keys' in rules and 'parameters' in obj:
-            for param_key in obj['parameters'].keys():
-                if param_key not in rules['valid_parameter_keys']:
-                    raise Exception(
-                        f'{param_key} not a valid parameter key for {proc_name}'
-                    )
-
-        # Confirm validity of fields keys
-        if 'valid_fields_keys' in rules and 'fields' in obj['parameters']:
-            for field in obj['parameters']['fields']:
-                for fields_key in field.keys():
-                    if fields_key not in rules['valid_fields_keys']:
-                        raise Exception(f'{fields_key} not a valid fields key for {proc_name}')
-
+        if 'run' not in obj:
+            raise Exception(f'"run" must be a key of the step object: {obj.keys()}')
         return True
 
 

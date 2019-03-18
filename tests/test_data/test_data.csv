@@ -1,24 +1,24 @@
 Genomic_Method,Taxon,Species,Lander,Lab_Intenifier,Block_Bone,Individuals,Lat,Long,Depth,TestRound,TestDate,TestDatetime,TestDateYear
-RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_6,Bv346_W22,W22,16,N 43o 54.522,W 125o 10 23,1605m,1.5242,2017-07-03,2017-03-03T11:24:32Z,03-03
-RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv347_W28,W28,9,N 47o 16.201,W 127o 35 57,2666m,1.23525,2017-07-03,2017-03-03T11:24:32Z,03-02
-RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv349_W1,W1,15,N 47o 16.201,W 127o 35 58,2666m,113.135,2017-07-03,2017-03-03T11:24:32Z,03-01
-RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv350_W26,W26,7,N 47o 16.201,W 127o 35 57,2666m,135.1351,2017-07-03,2017-03-03T11:24:32Z,04-29
-RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv351_W35,W35,14,N 47o 16.201,W 127o 35 57,2666m,53.135153,2017-07-03,2017-03-03T11:24:32Z,04-28
-RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv352_W15,W15,16,N 47o 57.462,W 126o 02 11,1596m,6536.35,2017-07-03,2017-03-03T11:24:32Z,04-27
-RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv353_W36,W36,12,N 47o 57.462,W 126o 02 11,1596m,54.5,2017-07-04,2017-03-03T11:24:32Z,04-26
-RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv354_W3,W3,10,N 47o 57.462,W 126o 02 11,1596m,542,2017-07-05,2017-03-03T11:24:32Z,04-25
-RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv355_W32,W32,5,N 47o 57.462,W 126o 02 11,1596m,542525,2017-07-06,2018-03-03T11:24:32Z,04-24
-RAD_seq,Bivalve,Xylophaga washingtona,FHL_Dock,NA,NA,5,N 48o 32.707,W 123o 00 59,15m,5,2017-07-07,2018-03-03T11:24:32Z,04-23
-mt_genome,Bivalve,Xylophaga cf. washingtona,BOWL_6,Bv346_W22,W22,2,N 43o 54.522,W 125o 10 23,1605m,45.2,2017-07-08,2018-03-03T11:24:32Z,04-22
-mt_genome,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv347_W28,W28,1,N 47o 16.201,W 127o 35 57,2666m,24.52,2017-07-09,2019-03-03T11:24:32Z,04-21
-mt_genome,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv351_W35,W35,1,N 47o 16.201,W 127o 35 57,2666m,425.13,2017-07-10,2019-03-03T11:24:32Z,04-20
-mt_genome,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv352_W15,W15,1,N 47o 57.462,W 126o 02 11,1596m,245.244,2017-07-11,2019-03-03T11:24:32Z,04-19
-mt_genome,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv355_W32,W32,1,N 47o 57.462,W 126o 02 11,1596m,53,2017-07-12,2020-03-03T11:24:32Z,04-18
-mt_genome,Bivalve,Xylophaga washingtona,FHL_Dock,NA,NA,2,N 48o 32.707,W 123o 00 59,1596m,3.21135,2017-07-13,2020-03-03T11:24:32Z,04-17
-mt_genome,AAAAnnelid,Amage sp.,BOWL_3,A3372.2,W25,1,N 47o 16.201,W 127o 35 57,1596m,3.24135,2017-07-14,2020-03-03T11:24:32Z,04-16
-mt_genome,Annelid,Amage sp.,BOWL_6,A3359.2,W15,1,N 43o 54.522,W 125o 10 23,1605m,3.42135,2017-07-15,2021-03-03T11:24:32Z,04-15
-Endosymbiont_genome,Bivalve,Xylophaga cf. washingtona,BOWL_6,Bv346_W22,w22,1,N 43o 54.522,W 125o 10 23,1605m,3.51135,2017-07-16,2021-03-03T11:24:32Z,04-14
-Endosymbiont_genome,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv347_W28,W28,1,N 47o 16.201,W 127o 35 57,2666m,3.123,2017-07-17,2021-03-03T11:24:32Z,04-13
-Endosymbiont_genome,Bivalve,Xylophaga cf. washingtona,BOWl_2,Bv352_W15,W15,1,N 47o 57.462,W 126o 02 11,1596m,3.31513,2017-07-18,2022-03-03T11:24:32Z,04-12
-Endosymbiont_genome,Annelid,Osedax rubiplumus,NA,A3262.52C,NA,1,S 65o 05.990,W 63o 09 44,700m,3.1135,2017-07-19,2022-03-03T11:24:32Z,04-11
+RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_6,Bv346_W22,W22,16,N 43o 54.522,W 125o 10 23,1605m,1.5242,2017-07-03,2017-03-03T11:24:32,03-03
+RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv347_W28,W28,9,N 47o 16.201,W 127o 35 57,2666m,1.23525,2017-07-03,2017-03-03T11:24:32,03-02
+RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv349_W1,W1,15,N 47o 16.201,W 127o 35 58,2666m,113.135,2017-07-03,2017-03-03T11:24:32,03-01
+RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv350_W26,W26,7,N 47o 16.201,W 127o 35 57,2666m,135.1351,2017-07-03,2017-03-03T11:24:32,04-29
+RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv351_W35,W35,14,N 47o 16.201,W 127o 35 57,2666m,53.135153,2017-07-03,2017-03-03T11:24:32,04-28
+RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv352_W15,W15,16,N 47o 57.462,W 126o 02 11,1596m,6536.35,2017-07-03,2017-03-03T11:24:32,04-27
+RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv353_W36,W36,12,N 47o 57.462,W 126o 02 11,1596m,54.5,2017-07-04,2017-03-03T11:24:32,04-26
+RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv354_W3,W3,10,N 47o 57.462,W 126o 02 11,1596m,542,2017-07-05,2017-03-03T11:24:32,04-25
+RAD_seq,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv355_W32,W32,5,N 47o 57.462,W 126o 02 11,1596m,542525,2017-07-06,2018-03-03T11:24:32,04-24
+RAD_seq,Bivalve,Xylophaga washingtona,FHL_Dock,NA,NA,5,N 48o 32.707,W 123o 00 59,15m,5,2017-07-07,2018-03-03T11:24:32,04-23
+mt_genome,Bivalve,Xylophaga cf. washingtona,BOWL_6,Bv346_W22,W22,2,N 43o 54.522,W 125o 10 23,1605m,45.2,2017-07-08,2018-03-03T11:24:32,04-22
+mt_genome,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv347_W28,W28,1,N 47o 16.201,W 127o 35 57,2666m,24.52,2017-07-09,2019-03-03T11:24:32,04-21
+mt_genome,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv351_W35,W35,1,N 47o 16.201,W 127o 35 57,2666m,425.13,2017-07-10,2019-03-03T11:24:32,04-20
+mt_genome,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv352_W15,W15,1,N 47o 57.462,W 126o 02 11,1596m,245.244,2017-07-11,2019-03-03T11:24:32,04-19
+mt_genome,Bivalve,Xylophaga cf. washingtona,BOWL_2,Bv355_W32,W32,1,N 47o 57.462,W 126o 02 11,1596m,53,2017-07-12,2020-03-03T11:24:32,04-18
+mt_genome,Bivalve,Xylophaga washingtona,FHL_Dock,NA,NA,2,N 48o 32.707,W 123o 00 59,1596m,3.21135,2017-07-13,2020-03-03T11:24:32,04-17
+mt_genome,AAAAnnelid,Amage sp.,BOWL_3,A3372.2,W25,1,N 47o 16.201,W 127o 35 57,1596m,3.24135,2017-07-14,2020-03-03T11:24:32,04-16
+mt_genome,Annelid,Amage sp.,BOWL_6,A3359.2,W15,1,N 43o 54.522,W 125o 10 23,1605m,3.42135,2017-07-15,2021-03-03T11:24:32,04-15
+Endosymbiont_genome,Bivalve,Xylophaga cf. washingtona,BOWL_6,Bv346_W22,w22,1,N 43o 54.522,W 125o 10 23,1605m,3.51135,2017-07-16,2021-03-03T11:24:32,04-14
+Endosymbiont_genome,Bivalve,Xylophaga cf. washingtona,BOWL_3,Bv347_W28,W28,1,N 47o 16.201,W 127o 35 57,2666m,3.123,2017-07-17,2021-03-03T11:24:32,04-13
+Endosymbiont_genome,Bivalve,Xylophaga cf. washingtona,BOWl_2,Bv352_W15,W15,1,N 47o 57.462,W 126o 02 11,1596m,3.31513,2017-07-18,2022-03-03T11:24:32,04-12
+Endosymbiont_genome,Annelid,Osedax rubiplumus,NA,A3262.52C,NA,1,S 65o 05.990,W 63o 09 44,700m,3.1135,2017-07-19,2022-03-03T11:24:32,04-11
 Endosymbiont_genome,Annelid,Osedax rubiplumus,BOWL_3,A3370.2E,V109,1,N 47o 57.462,W 126o 02 11,1596m,3.135,2017-07-20,2018-03-03T11:24:32Z,04-10

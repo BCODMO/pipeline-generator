@@ -3,20 +3,23 @@ import collections
 import logging
 import pyparsing as pp
 import time
+from dateutil import parser
+
+from dataflows.helpers.resource_matcher import ResourceMatcher
 
 from datapackage_pipelines.wrapper import ingest, spew
-from datapackage_pipelines.utilities.resource_matcher import ResourceMatcher
 
 parameters, datapackage, resource_iterator = ingest()
 
-resources = ResourceMatcher(parameters.get('resources'))
+resources = ResourceMatcher(parameters.get('resources'), datapackage)
 fields = parameters.get('fields', [])
 
 # Set up a language logic for parsing boolean strings
 operator = pp.Regex(">=|<=|!=|>|<|==").setName("operator")
 number = pp.Regex(r"[+-]?\d+(:?\.\d*)?(:?[eE][+-]?\d+)?")
 variable = pp.Regex(r"\{.*?\}")
-comparison_term = number | variable
+date = pp.Regex("(\d+[/:\- ])+(\d+)?")
+comparison_term = date | number | variable
 condition = pp.Group(comparison_term + operator + comparison_term)
 expr = pp.operatorPrecedence(
     condition,
@@ -31,8 +34,8 @@ expr = pp.operatorPrecedence(
 )
 
 def parse_pyparser_result(res, row):
+    logging.info(f'res: {res}, row: {row}')
     ''' Parse a result from pyparser '''
-
     if type(res) == bool:
         return res
     # Try to convert to float
@@ -45,7 +48,15 @@ def parse_pyparser_result(res, row):
         try:
             return float((res.format(**row)))
         except ValueError:
-            raise Exception(f'Failed to parse {res} into a valid number: {res.format(**row)}')
+            try:
+                val = res.format(**row)
+                if (val == ''):
+                    # TODO handle missing data value types
+                    return 0
+                return parser.parse(val)
+            except ValueError:
+                raise ValueError
+                raise Exception(f'Failed to parse {res} into a valid number or date: {res.format(**row)}')
 
     if len(res) == 0:
         return False
@@ -81,10 +92,6 @@ def parse_pyparser_result(res, row):
                     first_value = first_parsed or second_parsed
                 operation = None
     except TypeError as e:
-        logging.info('Error')
-        logging.info(first_value)
-        logging.info(operation)
-        logging.info(term)
         raise e
     return first_value
 
@@ -113,7 +120,6 @@ def process_resource(rows):
             field_functions[index].append(
                 expr.parseString(boolean_string)
             )
-
     for row in rows:
         for field_index in range(len(fields)):
             field = fields[field_index]

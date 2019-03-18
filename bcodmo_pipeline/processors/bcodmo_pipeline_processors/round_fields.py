@@ -1,10 +1,10 @@
 from datapackage_pipelines.wrapper import ingest, spew
-from datapackage_pipelines.utilities.resource_matcher import ResourceMatcher
+from dataflows.helpers.resource_matcher import ResourceMatcher
 import logging
 
 parameters, datapackage, resource_iterator = ingest()
 
-resources = ResourceMatcher(parameters.get('resources'))
+resources = ResourceMatcher(parameters.get('resources'), datapackage)
 fields = parameters.get('fields', [])
 
 
