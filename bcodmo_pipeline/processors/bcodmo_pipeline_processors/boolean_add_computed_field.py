@@ -34,7 +34,6 @@ expr = pp.operatorPrecedence(
 )
 
 def parse_pyparser_result(res, row):
-    logging.info(f'res: {res}, row: {row}')
     ''' Parse a result from pyparser '''
     if type(res) == bool:
         return res

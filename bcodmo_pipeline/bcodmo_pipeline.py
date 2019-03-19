@@ -189,7 +189,7 @@ class BcodmoPipeline:
                 # Clean up the directory, deleting old folders
                 cur_time = time.time()
                 dirs = [
-                    folder_name for folder_name in listdir(f'{file_path}/tmp')
+                    folder_name for folder_name in os.listdir(f'{file_path}/tmp')
                     if not folder_name.startswith('.')
                 ]
                 for folder_name in dirs:
