@@ -6,8 +6,9 @@ from datapackage_pipelines.utilities.resources import PROP_STREAMING, PROP_STREA
 # Import custom parsers here
 from parsers import FixedWidthParser
 # Add custom parsers here
+# Custom parsers should NOT have periods in there names
 custom_parsers = {
-    'bcodmo.fixedwidth': FixedWidthParser,
+    'bcodmo-fixedwidth': FixedWidthParser,
 }
 
 
