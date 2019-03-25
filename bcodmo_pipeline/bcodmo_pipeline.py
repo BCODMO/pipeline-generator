@@ -241,12 +241,14 @@ class BcodmoPipeline:
 
             # Get the title
             if 'title' not in res[name]:
-                raise Exception('Title not found while parsing file')
+                title = name
+            else:
+                title = res[name]['title']
             # Get the description
             if 'description' not in res[name]:
-                raise Exception('Description not found while parsing file')
-            title = res[name]['title']
-            description = res[name]['description']
+                description = ''
+            else:
+                description = res[name]['description']
 
             # Get the pipeline
             if 'pipeline' not in res[name]:
