@@ -12,7 +12,7 @@ custom_parsers = {
 }
 
 
-def flow(parameters):
+def flow(parameters, datapackage):
     _from = parameters.pop('from')
 
     num_resources = 0
@@ -34,6 +34,16 @@ def flow(parameters):
             yield from package
         return func
 
+    # Default the name to res[1-n]
+    if 'name' not in parameters:
+        resource_name_num = len(datapackage['resources']) + 1
+        resource_name = f'res{resource_name_num}'
+        while resource_name in [res['name'] for res in datapackage['resources']]:
+            resource_name_num += 1
+            resource_name = f'res{resource_name_num}'
+        parameters['name'] = resource_name
+
+
     return Flow(
         count_resources(),
         load(_from, custom_parsers = custom_parsers, **parameters),
@@ -43,4 +53,4 @@ def flow(parameters):
 
 if __name__ == '__main__':
     with ingest() as ctx:
-        spew_flow(flow(ctx.parameters), ctx)
+        spew_flow(flow(ctx.parameters, ctx.datapackage), ctx)
