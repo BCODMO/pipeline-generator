@@ -124,8 +124,8 @@ class BcodmoPipeline:
             self.save_to_file(f'{path}/pipeline-spec.yaml', steps=new_steps)
 
             try:
-                # Remove the data folder
-                shutil.rmtree(f'{path}/data', ignore_errors=True)
+                # Remove the results folder
+                shutil.rmtree(results_folder, ignore_errors=True)
                 if verbose:
                     verbose_string = '--verbose'
                 else:
@@ -149,34 +149,33 @@ class BcodmoPipeline:
             resources = {}
             # Go through all of outputted data
             if os.path.exists(results_folder):
-                for fname in [f for f in os.listdir(results_folder)
-                    if os.path.isfile(os.path.join(results_folder, f))
-                ]:
-                    if fname == 'datapackage.json':
-                        continue
-                    resource_name, ext = os.path.splitext(fname)
-                    # TODO support json format?
-                    if ext != '.csv':
-                        raise Exception(f'Non csv formats are not supported: {fname}')
-                    data_file_path = f'{results_folder}/{fname}'
-                    with open(data_file_path) as f:
-                        reader = csv.reader(f)
-                        header = next(reader)
-                        rows = []
-                        try:
-                            if num_rows >= 0:
-                                for i in range(num_rows):
-                                    rows.append(next(reader))
-                            else:
-                                while True:
-                                    row = next(reader)
-                                    rows.append(row)
-                        except StopIteration:
-                            pass
-                        resources[resource_name] = {
-                            'header': header,
-                            'rows': rows,
-                        }
+                for root, dirs, files in os.walk(results_folder):
+                    for fname in files:
+                        if fname == 'datapackage.json':
+                            continue
+                        resource_name, ext = os.path.splitext(fname)
+                        # TODO support json format?
+                        if ext != '.csv':
+                            raise Exception(f'Non csv formats are not supported: {fname}')
+                        data_file_path = os.path.join(root, fname)
+                        with open(data_file_path) as f:
+                            reader = csv.reader(f)
+                            header = next(reader)
+                            rows = []
+                            try:
+                                if num_rows >= 0:
+                                    for i in range(num_rows):
+                                        rows.append(next(reader))
+                                else:
+                                    while True:
+                                        row = next(reader)
+                                        rows.append(row)
+                            except StopIteration:
+                                pass
+                            resources[resource_name] = {
+                                'header': header,
+                                'rows': rows,
+                            }
 
             return {
                 'status_code': 0,
