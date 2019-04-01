@@ -12,7 +12,7 @@ parameters, datapackage, resource_iterator = ingest()
 
 resources = ResourceMatcher(parameters.get('resources'), datapackage)
 fields = parameters.get('fields', [])
-delete_source = parameters.get('delete_source', False)
+delete_input = parameters.get('delete_input', False)
 
 def modify_datapackage(datapackage_):
     output_fields = []
@@ -29,7 +29,7 @@ def modify_datapackage(datapackage_):
                 'type': 'string',
             } for f in output_fields]
             datapackage_fields += new_fields
-            if delete_source:
+            if delete_input:
                 datapackage_fields = [
                     f for f in datapackage_fields if f['name'] not in input_fields
                 ]
@@ -67,7 +67,7 @@ def process_resource(rows, missing_data_values):
                 string = groups[index]
                 output_field = output_fields[index]
                 row[output_field] = string
-            if delete_source:
+            if delete_input:
                 del row[input_field]
 
         yield row
