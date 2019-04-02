@@ -97,20 +97,34 @@ TEST_ADD_SCHEMA_METADATA = {
     'missingValues': ['nd', ''],
 }
 
+TEST_REORDER_FIELDS = {
+    'fields': [
+        'Lat',
+        'Long',
+        'Depth',
+        'Individuals',
+        'Genomic_Method',
+        'Taxon',
+        'Lab_Intenifier',
+        'TestRound',
+        'TestDate',
+        'TestDatetime',
+        'TestDateYear',
+        'Taxon-Species',
+        'Lat-converted',
+        'Long-converted',
+        'TestDateConverted',
+        'TestDateYearConverted',
+        'bool_computed_field',
+        'split1',
+        'split2',
+    ]
+}
+
 TEST_SAVE_PATH = TEST_PATH + 'data/'
+FIXED_WIDTH_TEST_DATA_URL = TEST_PATH + 'test_data/test_data.gof'
 
 TEST_STEPS = [
-#    {
-#        "run": "add_resource",
-#        "parameters": {
-#            "name": "default",
-#            "url": TEST_DATA_URL,
-#        },
-#    },
-#    {
-#        "run": "stream_remote_resources",
-#        "cache": True,
-#    },
     {
         "run": "load",
         "parameters": {
@@ -252,9 +266,6 @@ TEST_STEPS = [
             ],
         },
     },
-    #{
-    #    "run": "bcodmo_pipeline_processors.infer_types",
-    #},
     {
         "run": "bcodmo_pipeline_processors.add_schema_metadata",
         "parameters": TEST_ADD_SCHEMA_METADATA,
@@ -266,7 +277,34 @@ TEST_STEPS = [
                 'input_field': TEST_SPLIT_COLUMNS['input_field'],
                 'output_fields': TEST_SPLIT_COLUMNS['output_fields'],
                 'pattern': TEST_SPLIT_COLUMNS['pattern'],
-            }]
+            }],
+            "delete_input": True,
+        },
+    },
+    {
+        "run": "bcodmo_pipeline_processors.reorder_fields",
+        "parameters": {
+            "fields": TEST_REORDER_FIELDS['fields'],
+        },
+    },
+    {
+        "run": "bcodmo_pipeline_processors.rename_fields",
+        "parameters": {
+            "fields": [{
+                "old_field": "Lat",
+                "new_field": "Latnew_name",
+            }],
+        },
+    },
+    {
+        'run': 'load',
+        'parameters': {
+            'name': 'fixedwidth',
+            'from': FIXED_WIDTH_TEST_DATA_URL,
+            'format': 'bcodmo-fixedwidth',
+            'width': [8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8],
+            'skip_rows': [4, 5],
+            'headers': [2, 3],
         },
     },
     {
@@ -275,23 +313,4 @@ TEST_STEPS = [
             "out-path": TEST_SAVE_PATH,
         },
     }
-]
-
-FIXED_WIDTH_TEST_DATA_URL = TEST_PATH + 'test_data/test_data.gof'
-FIXED_WIDTH_TEST_STEPS = [
-    {
-        'run': 'add_resource',
-        'parameters': {
-            'name': 'default',
-            'url': FIXED_WIDTH_TEST_DATA_URL,
-            'format': 'bcodmo.fixedwidth',
-            'width': [8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8],
-            'skip_rows': [4, 5],
-            'headers': [2, 3],
-        },
-    },
-    {
-        'run': 'stream_remote_resources',
-        'cache': False,
-    },
 ]
