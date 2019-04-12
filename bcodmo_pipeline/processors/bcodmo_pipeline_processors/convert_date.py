@@ -35,12 +35,12 @@ def process_resource(rows, missing_data_values):
                 raise Exception(f'Input field {input_field} not found in row')
             row_value = row[input_field]
 
+            output_field = field['output_field']
             if row_value in missing_data_values or row_value is None:
-                row[input_field] = row_value
+                row[output_field] = row_value
                 continue
             row_value = str(row_value)
 
-            output_field = field['output_field']
             input_format = field['input_format']
             output_format = field['output_format']
 
