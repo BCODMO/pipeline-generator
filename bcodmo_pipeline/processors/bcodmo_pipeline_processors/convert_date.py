@@ -1,6 +1,7 @@
 from datapackage_pipelines.wrapper import ingest, spew
 from dataflows.helpers.resource_matcher import ResourceMatcher
 from datetime import datetime
+from dateutil.tz import tzoffset
 import logging
 import pytz
 import re
@@ -45,7 +46,9 @@ def process_resource(rows, missing_data_values):
             output_format = field['output_format']
 
             input_timezone = field.get('input_timezone', None)
+            input_timezone_utc_offset = field.get('input_timezone_utc_offset', None)
             output_timezone = field.get('output_timezone', None)
+            output_timezone_utc_offset = field.get('output_timezone_utc_offset', None)
             if not output_timezone:
                 output_timezone = 'UTC'
             year = field.get('year', None)
@@ -54,14 +57,24 @@ def process_resource(rows, missing_data_values):
             if not date_obj.tzinfo:
                 if not input_timezone:
                     raise Exception('Date string does not contain timezone information and timezone was not inputed')
-                input_timezone_obj = pytz.timezone(input_timezone)
-                date_obj = input_timezone_obj.localize(date_obj)
+                if input_timezone == 'UTC' and input_timezone_utc_offset:
+                    # Handle UTC offset timezones differently
+                    date_obj = date_obj.replace(tzinfo=tzoffset('UTC', input_timezone_utc_offset * 60 * 60))
+                else:
+                    input_timezone_obj = pytz.timezone(input_timezone)
+                    date_obj = input_timezone_obj.localize(date_obj)
 
             if year:
                 date_obj = date_obj.replace(year=int(year))
 
-            output_timezone_obj = pytz.timezone(output_timezone)
-            output_date_string = date_obj.astimezone(output_timezone_obj).strftime(output_format)
+            if output_timezone == 'UTC' and output_timezone_utc_offset:
+                # Handle UTC offset timezones differently
+                output_date_string = date_obj.astimezone(
+                    tzoffset('UTC', output_timezone_utc_offset * 60 * 60)
+                ).strftime(output_format)
+            else:
+                output_timezone_obj = pytz.timezone(output_timezone)
+                output_date_string = date_obj.astimezone(output_timezone_obj).strftime(output_format)
             # Python datetime uses UTC as the timezone string, ISO requires Z
             if output_timezone == 'UTC':
                 output_date_string = output_date_string.replace('UTC', 'Z')
