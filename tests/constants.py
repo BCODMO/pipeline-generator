@@ -110,14 +110,9 @@ TEST_REORDER_FIELDS = {
         'TestDate',
         'TestDatetime',
         'TestDateYear',
-        'Taxon-Species',
-        'Lat-converted',
-        'Long-converted',
-        'TestDateConverted',
-        'TestDateYearConverted',
-        'bool_computed_field',
-        'split1',
-        'split2',
+        'Species',
+        'Lander',
+        'Block_Bone',
     ]
 }
 
@@ -126,7 +121,7 @@ FIXED_WIDTH_TEST_DATA_URL = TEST_PATH + 'test_data/test_data.gof'
 
 TEST_STEPS = [
     {
-        "run": "load",
+        "run": "bcodmo_pipeline_processors.load",
         "parameters": {
             "name": "default",
             "from": TEST_DATA_URL,
@@ -135,7 +130,7 @@ TEST_STEPS = [
         "cache": True,
     },
     {
-        "run": "load",
+        "run": "bcodmo_pipeline_processors.load",
         "parameters": {
             "name": TEST_CONCAT['datapackage']['name'],
             "from": TEST_CONCAT['datapackage']['url'],
@@ -144,13 +139,39 @@ TEST_STEPS = [
         "cache": True,
     },
     {
-        "run": "concatenate",
+        "run": "bcodmo_pipeline_processors.concatenate",
         "parameters": {
             "fields": TEST_CONCAT['fields'],
             "target": {
-                "name": "default",
-                "path": "data/default"
+                "name": "concat_res",
+                "path": "data/concat_res"
             },
+            "include_source_name": "resource",
+            "source_field_name": "source_field",
+        },
+    },
+    {
+        "run": "bcodmo_pipeline_processors.concatenate",
+        "parameters": {
+            "fields": TEST_CONCAT['fields'],
+            "target": {
+                "name": "concat_res",
+                "path": "data/concat_res"
+            },
+            "include_source_name": "path",
+            "source_field_name": "source_field",
+        },
+    },
+    {
+        "run": "bcodmo_pipeline_processors.concatenate",
+        "parameters": {
+            "fields": TEST_CONCAT['fields'],
+            "target": {
+                "name": "concat_res",
+                "path": "data/concat_res"
+            },
+            "include_source_name": "file",
+            "source_field_name": "source_field",
         },
     },
     {
@@ -297,7 +318,7 @@ TEST_STEPS = [
         },
     },
     {
-        'run': 'load',
+        'run': 'bcodmo_pipeline_processors.load',
         'parameters': {
             'name': 'fixedwidth',
             'from': FIXED_WIDTH_TEST_DATA_URL,

@@ -18,18 +18,18 @@ class TestBcodmoPipeline():
         self.shared_data = { 'cache_id': None, 'res': None }
 
 
-    def run_pipeline(self, step_num):
+    def run_pipeline(self, step_nums):
         pipeline = BcodmoPipeline(
             name=TEST_NAME,
             title=TEST_TITLE,
             description=TEST_DESCRIPTION,
         )
-        for step in TEST_STEPS[0:step_num]:
-            pipeline.add_step(step)
+        for step_num in step_nums:
+            pipeline.add_step(TEST_STEPS[step_num])
 
         res = pipeline.run_pipeline(
             cache_id=self.shared_data['cache_id'],
-            #verbose=True,
+            verbose=True,
         )
         self.shared_data['cache_id'] = res['cache_id']
         self.shared_data['res'] = res
@@ -47,7 +47,7 @@ class TestBcodmoPipeline():
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     @pytest.mark.skip(reason='standard_processor')
     def test_load(self):
-        _, _, res = self.run_pipeline(2)
+        _, _, res = self.run_pipeline([0, 1])
         assert len(res['datapackage']['resources']) == 2
         assert res['datapackage']['resources'][0]['name'] == 'default'
         fields = res['datapackage']['resources'][0]['schema']['fields']
@@ -59,98 +59,114 @@ class TestBcodmoPipeline():
         assert len(rows2) == 1
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
-    @pytest.mark.skip(reason='standard_processor')
-    def test_concatenate(self):
-        rows, _, res = self.run_pipeline(3)
+    def test_concatenate_res(self):
+        rows, fields, res = self.run_pipeline([0, 1, 2])
         assert len(res['datapackage']['resources']) == 1
-        assert res['datapackage']['resources'][0]['name'] == 'default'
+        assert res['datapackage']['resources'][0]['name'] == 'concat_res'
         assert len(rows) == 24
+        assert len(fields) == 15
+        assert fields[14]['name'] == 'source_field'
+        assert rows[0][14] == 'default'
+
+    @pytest.mark.skipif(TEST_DEV, reason='test development')
+    def test_concatenate_path(self):
+        rows, fields, res = self.run_pipeline([0, 1, 3])
+        assert len(res['datapackage']['resources']) == 1
+        assert res['datapackage']['resources'][0]['name'] == 'concat_res'
+        assert len(rows) == 24
+        assert len(fields) == 15
+        assert fields[14]['name'] == 'source_field'
+        assert rows[0][14] == TEST_DATA_URL
+        assert rows[23][14] == TEST_CONCAT['datapackage']['url']
+
+    @pytest.mark.skipif(TEST_DEV, reason='test development')
+    def test_concatenate_file(self):
+        rows, fields, res = self.run_pipeline([0, 1, 4])
+        assert len(res['datapackage']['resources']) == 1
+        assert res['datapackage']['resources'][0]['name'] == 'concat_res'
+        assert len(rows) == 24
+        assert len(fields) == 15
+        assert fields[14]['name'] == 'source_field'
+        assert rows[0][14] == 'test_data.csv'
+        assert rows[23][14] == 'test_concat.csv'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     @pytest.mark.skip(reason='standard_processor')
     def test_delete_fields(self):
-        _, prev_fields, _ = self.run_pipeline(3)
+        _, prev_fields, _ = self.run_pipeline([0])
         assert prev_fields[3]['name'] == 'Lander'
-        _, fields, _ = self.run_pipeline(4)
+        _, fields, _ = self.run_pipeline([0, 5])
         assert fields[3]['name'] != 'Lander'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     @pytest.mark.skip(reason='standard_processor')
     def test_sort(self):
-        rows, _, _= self.run_pipeline(5)
+        rows, _, _= self.run_pipeline([0, 6])
         assert rows[0][1] == 'AAAAnnelid'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     @pytest.mark.skip(reason='standard_processor')
     def test_combine_fields(self):
-        rows, fields, _ = self.run_pipeline(6)
-        assert fields[12]['name'] == 'Taxon-Species'
-        assert rows[0][12] == 'AAAAnnelid Amage sp.'
+        rows, fields, _ = self.run_pipeline([0, 7])
+        assert fields[14]['name'] == 'Taxon-Species'
+        assert rows[0][14] == 'Bivalve Xylophaga cf. washingtona'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     def test_round_field(self):
-        rows, _, _ = self.run_pipeline(7)
-        assert rows[0][8] == '3.24'
+        rows, _, _ = self.run_pipeline([0, 8])
+        assert rows[0][10] == '1.52'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     def test_convert_field_decimal_degree(self):
-        rows, _, _ = self.run_pipeline(9)
-        assert rows[0][13] == '47.27001666666666324090328998863697052001953125'
-        assert rows[0][14] == '-127.599166666666661740237032063305377960205078125'
+        rows, _, _ = self.run_pipeline([0, 9, 10])
+        assert rows[0][14] == '43.90870000000000317186277243308722972869873046875'
+        assert rows[0][15] == '-125.17305555555554974489496089518070220947265625'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     def test_convert_date(self):
-        rows, _, _ = self.run_pipeline(11)
-        assert rows[0][15] == '2017-07-14 04:00:00'
-        assert rows[0][16] == '2015-04-16 04:56:00'
+        rows, _, _ = self.run_pipeline([0, 11, 12])
+        assert rows[0][14] == '2017-07-03 04:00:00'
+        assert rows[0][15] == '2015-03-03 04:56:00'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     def test_boolean_add_computed_field(self):
-        rows, _, _ = self.run_pipeline(12)
-        assert rows[0][17] == 'SHOULD BE THIS'
+        rows, _, _ = self.run_pipeline([0, 13])
+        assert rows[0][14] == 'SHOULD BE THIS'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     def test_add_resource_metadata(self):
-        _, _, res = self.run_pipeline(13)
+        _, _, res = self.run_pipeline([0, 14])
         assert res['datapackage']['resources'][0]['schema']['missingKeys'] == ['nd', '']
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     def test_split_column(self):
-        rows, fields, _ = self.run_pipeline(13)
+        rows, fields, _ = self.run_pipeline([0])
         assert fields[2]['name'] == 'Species'
 
-        rows, fields, _ = self.run_pipeline(14)
+        rows, fields, _ = self.run_pipeline([0, 15])
         # Test the delete_input parameter
         assert fields[2]['name'] != 'Species'
-        assert rows[0][17] == 'Amage'
-        assert rows[0][18] == 'sp.'
+        assert rows[0][13] == 'Xylophaga cf.'
+        assert rows[0][14] == 'washingtona'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     def test_reorder(self):
-        _, fields, _ = self.run_pipeline(15)
+        _, fields, _ = self.run_pipeline([0, 16])
 
         assert [f['name'] for f in fields] == TEST_REORDER_FIELDS['fields']
 
-    @pytest.mark.skipif(TEST_DEV, reason='test development')
-    def test_reorder(self):
-        _, fields, _ = self.run_pipeline(15)
-
-        assert [f['name'] for f in fields] == TEST_REORDER_FIELDS['fields']
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     def test_rename(self):
-        _, fields, _ = self.run_pipeline(16)
-        assert fields[0]['name'] == 'Latnew_name'
+        _, fields, _ = self.run_pipeline([0, 17])
+        assert fields[7]['name'] == 'Latnew_name'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
     def test_fixedwidth(self):
-        _, _, res = self.run_pipeline(16)
-        assert 'fixedwidth' not in res['resources']
-
-        _, _, res = self.run_pipeline(17)
+        _, _, res = self.run_pipeline([18])
         assert 'fixedwidth' in res['resources']
         rows = res['resources']['fixedwidth']['rows']
-        fields = res['datapackage']['resources'][1]['schema']['fields']
+        fields = res['datapackage']['resources'][0]['schema']['fields']
         assert fields[0]['name'] == 'STNNBR nan'
         assert rows[0][0] == '2'
         assert rows[0][1] == '3'

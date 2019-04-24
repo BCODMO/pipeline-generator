@@ -43,8 +43,8 @@ def flow(parameters, datapackage):
             for i in range(num_resources, len(package.pkg.resources)):
                 if package.pkg.descriptor['resources'][i]['name'] == _name:
                     package.pkg.descriptor['resources'][i]['schema']['missingValues'] = _missing_values
-                package.pkg.descriptor['resources'][i][PROP_STREAMING] = True
-                package.pkg.descriptor['resources'][i][PROP_STREAMED_FROM] = _from
+                    package.pkg.descriptor['resources'][i][PROP_STREAMING] = True
+                    package.pkg.descriptor['resources'][i][PROP_STREAMED_FROM] = _from
             yield package.pkg
             yield from package
         return func
