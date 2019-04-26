@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 required = [
     'PyYAML==4.2b1',
-    'datapackage-pipelines==2.1.1',
+    'datapackage-pipelines==2.1.5',
     'pyparsing==2.2.0',
 ]
 
