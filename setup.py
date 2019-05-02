@@ -9,7 +9,7 @@ required = [
 
 setup(
     name='pipeline-generator',
-    version='v0.0.2',
+    version='v0.0.4a',
     description='BCODMO Pipelines Library',
     author='BCODMO',
     author_email='conrad.schloer@gmail.com',
