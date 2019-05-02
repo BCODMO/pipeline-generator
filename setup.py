@@ -4,6 +4,7 @@ required = [
     'PyYAML==4.2b1',
     'datapackage-pipelines==2.1.5',
     'pyparsing==2.2.0',
+    'dataflows==0.0.50',
 ]
 
 
