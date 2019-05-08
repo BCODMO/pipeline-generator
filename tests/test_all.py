@@ -162,6 +162,15 @@ class TestBcodmoPipeline():
         assert fields[7]['name'] == 'Latnew_name'
 
     @pytest.mark.skipif(TEST_DEV, reason='test development')
+    def test_remove_resource(self):
+        _, _, res = self.run_pipeline([0, 19])
+        assert len(res['datapackage']['resources']) == 2
+        assert res['datapackage']['resources'][1]['name'] == 'duplicate_test'
+
+        _, _, res = self.run_pipeline([0, 19, 20])
+        assert len(res['datapackage']['resources']) == 1
+
+    @pytest.mark.skipif(TEST_DEV, reason='test development')
     def test_fixedwidth(self):
         _, _, res = self.run_pipeline([18])
         assert 'fixedwidth' in res['resources']

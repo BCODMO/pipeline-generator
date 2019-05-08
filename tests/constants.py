@@ -329,6 +329,21 @@ TEST_STEPS = [
         },
     },
     {
+        'run': 'duplicate',
+        'parameters': {
+            'source': 'default',
+            'target-name': 'duplicate_test',
+        },
+
+    },
+    {
+        'run': 'bcodmo_pipeline_processors.remove_resources',
+        'parameters': {
+            'resources': ['duplicate_test'],
+        },
+
+    },
+    {
         "run": "dump_to_path",
         "parameters": {
             "out-path": TEST_SAVE_PATH,
