@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 required = [
-    'PyYAML==4.2b1',
+    'PyYAML==5.1',
     'datapackage-pipelines==2.1.5',
     'pyparsing==2.2.0',
     'dataflows==0.0.50',
@@ -10,7 +10,7 @@ required = [
 
 setup(
     name='pipeline-generator',
-    version='v0.0.4b',
+    version='v0.0.4c',
     description='BCODMO Pipelines Library',
     author='BCODMO',
     author_email='conrad.schloer@gmail.com',

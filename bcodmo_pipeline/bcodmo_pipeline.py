@@ -223,7 +223,7 @@ class BcodmoPipeline:
                 'description': self.description,
                 'pipeline': steps,
             }
-        })
+        }, sort_keys=False)
 
     def _parse_pipeline_spec(self, pipeline_spec):
         '''
