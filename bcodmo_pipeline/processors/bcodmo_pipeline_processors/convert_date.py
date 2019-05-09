@@ -31,12 +31,27 @@ def modify_datapackage(datapackage_):
 def process_resource(rows, missing_data_values):
     for row in rows:
         for field in fields:
-            input_field = field['input_field']
-            if input_field not in row:
-                raise Exception(f'Input field {input_field} not found in row')
-            row_value = row[input_field]
+            row_value = None
+            # Support multiple input fields
+            if 'input_fields' in field:
+                input_fields = field['input_fields']
+                for input_field in input_fields:
+                    if input_field not in row:
+                        raise Exception(f'Input field {input_field} not found in row')
+                row_value = ' '.join([
+                    row[input_field] for input_field in input_fields
+                    if row[input_field] and row[input_field] not in missing_data_values
+                ])
+            # Backwards compatability with a single input field
+            elif 'input_field' in field:
+                input_field = field['input_field']
+                if input_field not in row:
+                    raise Exception(f'Input field {input_field} not found in row')
+                row_value = row[input_field]
 
             output_field = field['output_field']
+            if not output_field:
+                raise Exception('Output field name is required')
             if row_value in missing_data_values or row_value is None:
                 row[output_field] = row_value
                 continue
