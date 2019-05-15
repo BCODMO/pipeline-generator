@@ -23,7 +23,7 @@ class PathDumper(FileDumper):
         PathDumper.__makedirs(path_part)
         shutil.copy(filename, path)
         # Change file permissions to 777
-        os.chmod(path, 0o777)
+        os.chmod(path, 0o775)
         return path
 
     @staticmethod
