@@ -5,13 +5,13 @@ required = [
     'datapackage-pipelines==2.1.5',
     'pyparsing==2.2.0',
     'dataflows==0.0.50',
-    'git+ssh://git@github.com/bcodmo/bcodmo_processors.git@master',
+    'bcodmo_processors @ git+https://git@github.com/BCODMO/bcodmo_processors.git@master',
 ]
 
 
 setup(
     name='pipeline-generator',
-    version='v0.0.4d',
+    version='v0.0.4e',
     description='BCODMO Pipelines Library',
     author='BCODMO',
     author_email='conrad.schloer@gmail.com',
