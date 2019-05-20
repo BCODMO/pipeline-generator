@@ -5,6 +5,7 @@ required = [
     'datapackage-pipelines==2.1.5',
     'pyparsing==2.2.0',
     'dataflows==0.0.50',
+    'git+ssh://git@github.com/bcodmo/bcodmo_processors.git@master',
 ]
 
 

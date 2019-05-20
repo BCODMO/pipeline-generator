@@ -14,6 +14,8 @@ import uuid
 import yaml
 import re
 
+import bcodmo_processors
+
 logging.basicConfig(
     level=logging.DEBUG,
 )
@@ -102,11 +104,13 @@ class BcodmoPipeline:
         if not pattern.match(cache_id):
             raise Exception('The unique ID that was provided was not in uuid format')
 
+        processor_path = os.path.dirname(bcodmo_processors.__file__)
+        os.environ['DPP_PROCESSOR_PATH'] = processor_path
+
         ''' IMPORTANT '''
         # If the file structure between this file and the tmp folder
         # ever changes this code must change
         file_path = os.path.dirname(os.path.realpath(__file__))
-        os.environ['DPP_PROCESSOR_PATH'] = file_path + '/processors'
         path = f'{file_path}/tmp/{cache_id}'
         results_folder = f'{path}/results'
         # Create the directory and file
