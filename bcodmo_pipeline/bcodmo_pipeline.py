@@ -117,6 +117,7 @@ class BcodmoPipeline:
         if not os.path.exists(path):
             os.makedirs(path)
         try:
+            self.save_to_file(f'{path}/pipeline-spec.yaml.original', steps=self._steps)
             # Create a new save step so we can access the data here
             new_save_step = {
                 'run': 'dump_to_path',
