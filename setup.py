@@ -4,7 +4,7 @@ required = [
     'PyYAML==5.1',
     #'datapackage-pipelines==2.1.6',
     # Testing full outer join
-    'datapackage-pipelines @ git+https://github.com/okfn/datapackage-pipelines.git@full-outer-join',
+    'datapackage-pipelines @ git+https://github.com/frictionlessdata/datapackage-pipelines.git@full-outer-join',
     'pyparsing==2.2.0',
     #'dataflows==0.0.55',
     # Testing full-outer-join
