@@ -2,13 +2,9 @@ from setuptools import setup, find_packages
 
 required = [
     'PyYAML==5.1',
-    #'datapackage-pipelines==2.1.6',
-    # Testing full outer join
-    'datapackage-pipelines @ git+https://github.com/frictionlessdata/datapackage-pipelines.git@full-outer-join',
+    'datapackage-pipelines==2.1.9',
     'pyparsing==2.2.0',
-    #'dataflows==0.0.55',
-    # Testing full-outer-join
-    'dataflows @ git+https://github.com/roll/dataflows.git@full-outer-join',
+    'dataflows==0.0.57',
     'bcodmo_processors @ git+https://git@github.com/BCODMO/bcodmo_processors.git@master',
 ]
 

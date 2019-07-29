@@ -1,6 +1,6 @@
 PyYAML==5.1
-datapackage-pipelines==2.1.6
-dataflows==0.0.55
+datapackage-pipelines==2.1.9
+dataflows==0.0.57
 pyparsing==2.2.0
 python-dateutil==2.7.3
 git+ssh://git@github.com/bcodmo/bcodmo_processors.git@master
