@@ -4,4 +4,4 @@ dataflows==0.0.58
 pyparsing==2.2.0
 python-dateutil==2.7.3
 tabulator==1.22
-git+ssh://git@github.com/bcodmo/bcodmo_processors.git@v1.0.1
+git+ssh://git@github.com/bcodmo/bcodmo_processors.gi@master

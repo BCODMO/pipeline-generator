@@ -6,7 +6,7 @@ required = [
     'pyparsing==2.2.0',
     'dataflows==0.0.58',
     'tabulator==1.22',
-    'bcodmo_processors @ git+https://git@github.com/BCODMO/bcodmo_processors.git@v1.0.1',
+    'bcodmo_processors @ git+https://git@github.com/BCODMO/bcodmo_processors.git@master',
 ]
 
 
