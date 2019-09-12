@@ -3,5 +3,5 @@ datapackage-pipelines==2.1.9
 dataflows==0.0.58
 pyparsing==2.2.0
 python-dateutil==2.7.3
-tabulator==1.22
+tabulator>=1.24.2
 git+ssh://git@github.com/bcodmo/bcodmo_processors.gi@master
