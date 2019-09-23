@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 required = [
     'PyYAML==5.1',
-    'bcodmo_processors @ git+https://git@github.com/BCODMO/bcodmo_processors.git@v1.0.2',
+    'bcodmo_processors @ git+https://git@github.com/BCODMO/bcodmo_processors.git@master',
 ]
 
 
