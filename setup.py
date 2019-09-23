@@ -2,10 +2,6 @@ from setuptools import setup, find_packages
 
 required = [
     'PyYAML==5.1',
-    'datapackage-pipelines==2.1.9',
-    'pyparsing==2.2.0',
-    'dataflows==0.0.58',
-    'tabulator==1.24.2',
     'bcodmo_processors @ git+https://git@github.com/BCODMO/bcodmo_processors.git@v1.0.2',
 ]
 
