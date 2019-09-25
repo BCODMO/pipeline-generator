@@ -1,3 +1,4 @@
 PyYAML==5.1
 python-dateutil==2.7.3
-git+ssh://git@github.com/bcodmo/bcodmo_processors.gi@master
+virtualenv==16.7.5
+git+ssh://git@github.com/bcodmo/bcodmo_processors.git@master

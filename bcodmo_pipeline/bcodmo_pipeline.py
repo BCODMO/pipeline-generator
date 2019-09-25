@@ -3,11 +3,13 @@ import io
 import json
 import logging
 import os
+import sys
 import shutil
 from subprocess import (
     check_output,
     STDOUT,
     CalledProcessError,
+    call,
 )
 import time
 import uuid
@@ -45,14 +47,21 @@ class BcodmoPipeline:
                     A list of steps representing the pipeline
                     These steps will be validated using the constants.py file
         '''
+
+        # Attributes for virtualenv
+        self.prev_os_path = None
+        self.prev_sys_path = None
+        self.prev_prefix = None
+
         if 'pipeline_spec' in kwargs:
             self.name, self.title, \
-                self.description, self._steps \
+                self.description, self.version, self._steps \
                 = self._parse_pipeline_spec(kwargs['pipeline_spec'])
         else:
             self.name = kwargs['name']
             self.title = kwargs['title']
             self.description = kwargs['description']
+            self.version = kwargs['version']
             self._steps = []
             if 'steps' in kwargs:
                 for step in kwargs['steps']:
@@ -72,6 +81,7 @@ class BcodmoPipeline:
             self.name: {
                 'title': self.title,
                 'description': self.description,
+                'version': self.version,
                 'pipeline': self._steps,
             }
         }
@@ -104,9 +114,6 @@ class BcodmoPipeline:
         if not pattern.match(cache_id):
             raise Exception('The unique ID that was provided was not in uuid format')
 
-        processor_path = os.path.dirname(bcodmo_processors.__file__)
-        os.environ['DPP_PROCESSOR_PATH'] = processor_path
-
         ''' IMPORTANT '''
         # If the file structure between this file and the tmp folder
         # ever changes this code must change
@@ -117,6 +124,8 @@ class BcodmoPipeline:
         if not os.path.exists(path):
             os.makedirs(path)
         try:
+
+
             self.save_to_file(f'{path}/pipeline-spec.yaml.original', steps=self._steps)
             # Create a new save step so we can access the data here
             new_save_step = {
@@ -135,12 +144,19 @@ class BcodmoPipeline:
                     verbose_string = '--verbose'
                 else:
                     verbose_string = ''
-                completed_process = check_output(
-                    f'cd {path}/.. && dpp run {verbose_string} ./{cache_id}/{self.name}',
-                    shell=True,
-                    stderr=STDOUT,
-                    universal_newlines=True,
-                )
+
+                dpp_command_path, processor_path = self._get_version_paths(self.version)
+                os.environ['DPP_PROCESSOR_PATH'] = processor_path
+                try:
+                    self._activate_virtualenv(self.version)
+                    completed_process = check_output(
+                        f'cd {path}/.. && {dpp_command_path} run {verbose_string} ./{cache_id}/{self.name}',
+                        shell=True,
+                        stderr=STDOUT,
+                        universal_newlines=True,
+                    )
+                finally:
+                    self._deactivate_virtualenv()
             except CalledProcessError as e:
                 return {
                     'status_code': e.returncode,
@@ -226,6 +242,7 @@ class BcodmoPipeline:
             self.name: {
                 'title': self.title,
                 'description': self.description,
+                'version': self.version,
                 'pipeline': steps,
             }
         }, sort_keys=False)
@@ -254,6 +271,12 @@ class BcodmoPipeline:
             else:
                 description = res[name]['description']
 
+            # Get the version
+            if 'version' not in res[name]:
+                version = ''
+            else:
+                version = res[name]['version']
+
             # Get the pipeline
             if 'pipeline' not in res[name]:
                 raise Exception('Pipeline not found while parsing file')
@@ -271,5 +294,56 @@ class BcodmoPipeline:
 
         except yaml.YAMLError as e:
             raise e
-        return name, title, description, steps
+        return name, title, description, version, steps
+
+    def _get_virtualenv_dir(self, version):
+        if self.version:
+            virtualenv_dir = os.path.join('/home/virtualenvs', self.version)
+            if os.path.exists(virtualenv_dir):
+                return virtualenv_dir
+        return None
+
+    def _get_version_paths(self, version):
+        # workon the python virtualenv associated with this version
+        virtualenv_dir = self._get_virtualenv_dir(version)
+        if virtualenv_dir:
+            dpp_command_path = os.path.join(virtualenv_dir, 'bin', 'dpp')
+            lib_path = os.path.join(virtualenv_dir, 'lib')
+            # Assume only one python version in the virtualenv lib folder
+            python_version = os.listdir(lib_path)[0]
+            processor_path = os.path.join(lib_path, python_version, 'site-packages', 'bcodmo_processors')
+
+            return dpp_command_path, processor_path
+
+        # If no specific dpp command found for this version, just return 'dpp'
+        return 'dpp', os.path.dirname(bcodmo_processors.__file__)
+
+    def _activate_virtualenv(self, version):
+        # Activate the virtual env
+        virtualenv_dir = self._get_virtualenv_dir(version)
+        if virtualenv_dir:
+            activate_file = os.path.join(virtualenv_dir, "bin", "activate_this.py")
+
+            # Set the env variable for later deactivation
+            self.prev_os_path = os.environ['PATH']
+            self.prev_sys_path = list(sys.path)
+            self.prev_prefix = sys.prefix
+
+            with open(activate_file) as f:
+                    code = compile(f.read(), activate_file, "exec")
+                    exec(code, { '__file__': activate_file })
+            return None
+        self.prev_os_path = None
+        self.prev_sys_path = None
+        self.prev_prefix = None
+        return None
+
+
+    def _deactivate_virtualenv(self):
+        # Deactivate the virtualenv
+        if self.prev_os_path and self.prev_sys_path and self.prev_prefix:
+            os.environ['PATH'] = self.prev_os_path
+            sys.path[:0] = self.prev_sys_path
+            sys.prefix = self.prev_prefix
+
 
