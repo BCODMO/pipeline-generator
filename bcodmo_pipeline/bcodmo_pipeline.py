@@ -158,9 +158,30 @@ class BcodmoPipeline:
                 finally:
                     self._deactivate_virtualenv()
             except CalledProcessError as e:
+                error_text = e.output
+                new_error_text = ''
+                if not verbose:
+                    # Attempt to parse the error into something more readable
+                    prev_line = None
+                    enter_error_detail = False
+                    for line in e.output.splitlines():
+                        if line.startswith('| ERROR') and enter_error_detail:
+                            new_error_text += f'\n{line}'
+
+                        if line == '+--------':
+                            if enter_error_detail:
+                                new_error_text += f'\n{prev_line}'
+                                new_error_text += f'\n{line}'
+                                break
+                            else:
+                                new_error_text = line
+                                enter_error_detail = True
+                        prev_line = line
+                    if new_error_text:
+                        error_text = new_error_text
                 return {
                     'status_code': e.returncode,
-                    'error_text': e.output,
+                    'error_text': error_text,
                     'cache_id': cache_id,
                 }
 
