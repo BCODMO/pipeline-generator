@@ -1,16 +1,21 @@
 import csv
+import asyncio
+import psutil
+import threading
 import io
 import json
+from contextlib import redirect_stderr
 import logging
 import os
 import sys
 import shutil
-from subprocess import (
-    check_output,
-    STDOUT,
-    CalledProcessError,
-    call,
-)
+import signal
+from datapackage_pipelines.manager import run_pipelines
+from datapackage_pipelines.manager.tasks import async_execute_pipeline
+from datapackage_pipelines.status import status_mgr
+from datapackage_pipelines import pipelines
+from datapackage_pipelines.utilities.execution_id import gen_execution_id
+import subprocess
 import time
 import uuid
 import yaml
@@ -22,6 +27,9 @@ logging.basicConfig(
     level=logging.DEBUG,
 )
 logger = logging.getLogger(__name__)
+
+FILE_PATH = os.path.dirname(os.path.realpath(__file__))
+ROOT_DIR = f'{FILE_PATH}/tmp'
 
 # Day in seconds
 DAY = 60 * 60 * 24
@@ -67,10 +75,10 @@ class BcodmoPipeline:
                 for step in kwargs['steps']:
                     self.add_step(step)
 
-    def save_to_file(self, file_path, steps=None):
+    def save_to_file(self, save_file_path, steps=None):
         if not steps:
             steps = self._steps
-        with open(file_path, 'w') as fd:
+        with open(save_file_path, 'w') as fd:
             num_chars = fd.write(self._get_yaml_format(steps=steps))
 
     def get_yaml(self):
@@ -90,116 +98,47 @@ class BcodmoPipeline:
         self._confirm_valid(obj)
         self._steps.append(obj)
 
-    def run_pipeline(self, cache_id=None, verbose=False, num_rows=-1):
-        '''
-        Runs the datapackage pipelines for this pipeline
+    @staticmethod
+    def delete_pipeline_data(cache_id):
+        folder = f'{FILE_PATH}/tmp/{cache_id}'
+        shutil.rmtree(folder)
+        return {
+            'status_code': 0,
+        }
 
-        - On fail, return error message
-        - On success, return datapackage.json contents and the
-        first line of each resulting csv
 
-        - On both fail and success return a status code and a
-        unique id that can be passed back in to this function
-        to use the cache
-        '''
-        if not cache_id:
-            cache_id = str(uuid.uuid1())
-
-        # We have to check the cache_id value since it's
-        # potentially being passed in from the outside
-        pattern = re.compile(
-            r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}'
-            r'-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-        )
-        if not pattern.match(cache_id):
-            raise Exception('The unique ID that was provided was not in uuid format')
-
-        ''' IMPORTANT '''
-        # If the file structure between this file and the tmp folder
-        # ever changes this code must change
-        file_path = os.path.dirname(os.path.realpath(__file__))
-        path = f'{file_path}/tmp/{cache_id}'
-        results_folder = f'{path}/results'
-        # Create the directory and file
-        if not os.path.exists(path):
-            os.makedirs(path)
+    @staticmethod
+    def get_pipeline_data(cache_id, num_rows=-1):
         try:
+            num_rows = int(num_rows)
+        except ValueError:
+            raise Exception(f'The passed in parameter num_rows "{num_rows}" was not able to be parsed into an integer')
+        datapackage = {}
+        yaml = None
+        resources = {}
 
+        cache_folder = f'{FILE_PATH}/tmp/{cache_id}'
+        pipeline_spec_file = f'{cache_folder}/pipeline-spec.yaml'
+        if os.path.exists(pipeline_spec_file):
+            with open(pipeline_spec_file) as f:
+                yaml = f.read()
 
-            self.save_to_file(f'{path}/pipeline-spec.yaml.original', steps=self._steps)
-            # Create a new save step so we can access the data here
-            new_save_step = {
-                'run': 'dump_to_path',
-                'parameters': {
-                    'out-path': results_folder,
-                }
-            }
-            new_steps = self._steps + [new_save_step]
-            self.save_to_file(f'{path}/pipeline-spec.yaml', steps=new_steps)
-
-            try:
-                # Remove the results folder
-                shutil.rmtree(results_folder, ignore_errors=True)
-                if verbose:
-                    verbose_string = '--verbose'
-                else:
-                    verbose_string = ''
-
-                dpp_command_path, processor_path = self._get_version_paths(self.version)
-                os.environ['DPP_PROCESSOR_PATH'] = processor_path
-                try:
-                    self._activate_virtualenv(self.version)
-                    completed_process = check_output(
-                        f'cd {path}/.. && {dpp_command_path} run {verbose_string} ./{cache_id}/{self.name}',
-                        shell=True,
-                        stderr=STDOUT,
-                        universal_newlines=True,
-                    )
-                finally:
-                    self._deactivate_virtualenv()
-            except CalledProcessError as e:
-                error_text = e.output
-                new_error_text = ''
-                if not verbose:
-                    # Attempt to parse the error into something more readable
-                    prev_line = None
-                    enter_error_detail = False
-                    for line in e.output.splitlines():
-                        if line.startswith('| ERROR') and enter_error_detail:
-                            new_error_text += f'\n{line}'
-
-                        if line == '+--------':
-                            if enter_error_detail:
-                                new_error_text += f'\n{prev_line}'
-                                new_error_text += f'\n{line}'
-                                break
-                            else:
-                                new_error_text = line
-                                enter_error_detail = True
-                        prev_line = line
-                    if new_error_text:
-                        error_text = new_error_text
-                return {
-                    'status_code': e.returncode,
-                    'error_text': error_text,
-                    'cache_id': cache_id,
-                }
-
-            with open(f'{results_folder}/datapackage.json') as f:
-                datapackage = json.load(f)
-
-            resources = {}
-            # Go through all of outputted data
-            if os.path.exists(results_folder):
-                for root, dirs, files in os.walk(results_folder):
-                    for fname in files:
-                        if fname == 'datapackage.json':
-                            continue
-                        resource_name, ext = os.path.splitext(fname)
-                        # TODO support json format?
-                        if ext != '.csv':
-                            raise Exception(f'Non csv formats are not supported: {fname}')
-                        data_file_path = os.path.join(root, fname)
+        data_folder = f'{cache_folder}/results'
+        if os.path.exists(data_folder):
+            datapackage_file = f'{data_folder}/datapackage.json'
+            if os.path.exists(datapackage_file):
+                with open(datapackage_file) as f:
+                    datapackage = json.load(f)
+            for root, dirs, files in os.walk(data_folder):
+                for fname in files:
+                    if fname == 'datapackage.json':
+                        continue
+                    resource_name, ext = os.path.splitext(fname)
+                    # TODO support json format?
+                    if ext != '.csv':
+                        raise Exception(f'Non csv formats are not supported: {fname}')
+                    data_file_path = os.path.join(root, fname)
+                    if os.path.exists(data_file_path):
                         with open(data_file_path) as f:
                             reader = csv.reader(f)
                             header = next(reader)
@@ -219,27 +158,229 @@ class BcodmoPipeline:
                                 'rows': rows,
                             }
 
-            return {
-                'status_code': 0,
-                'cache_id': cache_id,
-                'datapackage': datapackage,
-                'resources': resources,
+        return {
+            'cache_id': cache_id,
+            'datapackage': datapackage,
+            'yaml': yaml,
+            'resources': resources,
+        }
+
+    @staticmethod
+    def get_pipeline_status(cache_id, name):
+        status = status_mgr(f'{FILE_PATH}/tmp')
+        pipeline_status = status.get(f'./{cache_id}/{name}')
+        start_time = None
+        finish_time = None
+        pipeline_id = None
+        status = None
+        success = None
+        error_log = None
+
+        if pipeline_status and pipeline_status.last_execution:
+            last_execution = pipeline_status.last_execution
+            start_time = last_execution.start_time
+            pipeline_id = last_execution.pipeline_id
+            finish_time = last_execution.finish_time
+            success = last_execution.success
+            error_log = last_execution.error_log
+            status = pipeline_status.state()
+
+        return {
+            'start_time': start_time,
+            'finish_time': finish_time,
+            'pipeline_id': pipeline_id,
+            'status': status,
+            'error_log': error_log,
+            'success': success,
+        }
+
+    def run_pipeline_thread(self, cache_id, verbose):
+        cache_dir = f'{ROOT_DIR}/{cache_id}'
+        pipeline_spec_path = f'{cache_dir}/pipeline-spec.yaml'
+        pipeline_id = f'./{cache_id}/{self.name}'
+
+        dpp_command_path, processor_path = self._get_version_paths(self.version)
+        os.environ['DPP_PROCESSOR_PATH'] = processor_path
+        try:
+            # Activate the correct virtual environment
+            self._activate_virtualenv(self.version)
+
+            # Set the verbose string if necessary
+            if verbose:
+                command_list = [dpp_command_path, 'run', '--verbose', pipeline_id]
+            else:
+                command_list = [dpp_command_path, 'run', pipeline_id]
+
+            # Start the dpp process
+            p = subprocess.Popen(
+                command_list,
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                cwd=ROOT_DIR,
+            )
+
+            sleep_timer = 1
+            while p.poll() is None:
+                time.sleep(1)
+                if sleep_timer != 5:
+                    sleep_timer += 1
+
+                # The pipeline-spec.yaml was deleted, need to end the process now
+                if not os.path.exists(pipeline_spec_path):
+                    # Get the chilren of the dpp process (the dpp slave process)
+                    children = [child.pid for child in psutil.Process(p.pid).children()]
+
+                    # Terminate the parent process
+                    p.terminate()
+                    # Terminate all of the children processes
+                    for child in children:
+                        os.kill(child, signal.SIGTERM)
+
+                    # Invalidate the pipeline in the dpp backend
+                    status = status_mgr(ROOT_DIR)
+                    pipeline_status = status.get(pipeline_id)
+                    if pipeline_status:
+                        last_execution = pipeline_status.last_execution
+                        if last_execution:
+                            last_execution.finish_execution(
+                                False,
+                                {},
+                                ['This pipeline was stopped by laminar'],
+                            )
+
+                    # One last try
+                    if p.poll() is None:
+                        p.kill()
+                        break
+        finally:
+            # Deactivate the virtualenv - not sure if this is necessary since it is a thread
+            self._deactivate_virtualenv()
+
+        # If the pipeline-spec.yaml file has been deleted since this thread started, the
+        # whole cache_id folder should be deleted
+        if not os.path.exists(pipeline_spec_path) and os.path.exists(cache_dir):
+            shutil.rmtree(cache_dir)
+
+    def run_pipeline(self, cache_id=None, verbose=False, num_rows=-1, background=False):
+        '''
+        Starts a thread that runs the datapackage pipelines for this pipeline
+
+        - On fail, return error message
+        - On success, return datapackage.json contents and the resulting csv
+
+        - On both fail and success return a status code and a
+        unique id that can be passed back in to this function
+        to use the cache
+
+        - if run in the background use the static functions get_pipeline_status and
+          get_pipeline_data to access the results.
+        '''
+        if not cache_id:
+            cache_id = str(uuid.uuid1())
+
+        # We have to check the cache_id value since it's
+        # potentially being passed in from the outside
+        pattern = re.compile(
+            r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}'
+            r'-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+        )
+        if not pattern.match(cache_id):
+            raise Exception('The unique ID that was provided was not in uuid format')
+
+        ''' IMPORTANT '''
+        # If the file structure between this file and the tmp folder
+        # ever changes this code must change
+        cache_dir = f'{ROOT_DIR}/{cache_id}'
+        results_folder = f'{cache_dir}/results'
+        # Create the directory and file
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+        try:
+            self.save_to_file(f'{cache_dir}/pipeline-spec.yaml.original', steps=self._steps)
+            # Create a new save step so we can access the data here
+            new_save_step = {
+                'run': 'dump_to_path',
+                'parameters': {
+                    'out-path': results_folder,
+                }
             }
+            new_steps = self._steps + [new_save_step]
+            self.save_to_file(f'{cache_dir}/pipeline-spec.yaml', steps=new_steps)
+
+            # Remove the results folder
+            shutil.rmtree(results_folder, ignore_errors=True)
+
+            pipeline_id = f'./{cache_id}/{self.name}'
+            status = status_mgr(ROOT_DIR)
+            pipeline_status = status.get(pipeline_id)
+            last_execution = pipeline_status.last_execution
+            old_start_time = None
+            if last_execution:
+                old_start_time = last_execution.start_time
+
+            x = threading.Thread(target=self.run_pipeline_thread, args=(cache_id, verbose,), daemon=True)
+            x.start()
+
+            if background:
+                while True:
+                    # Loop until the next pipeline has started
+                    status = status_mgr(ROOT_DIR)
+                    pipeline_status = status.get(pipeline_id)
+                    last_execution = pipeline_status.last_execution
+                    if last_execution and last_execution.start_time != old_start_time:
+                        break
+                    if x.is_alive():
+                        time.sleep(0.1)
+                    else:
+                        return {
+                            'status_code': 1,
+                            'cache_id': cache_id,
+                            'yaml': self.get_yaml(),
+                            'error_text': 'There was an unknown error in starting the pipeline',
+                        }
+
+                return {
+                    'status_code': 0,
+                    'cache_id': cache_id,
+                    'yaml': self.get_yaml(),
+                }
+
+            else:
+                # Join the thread
+                x.join()
+                status_dict = BcodmoPipeline.get_pipeline_status(cache_id, self.name)
+                if status_dict['success']:
+                    pipeline_data = BcodmoPipeline.get_pipeline_data(cache_id, num_rows)
+                    return {
+                        'status_code': 0,
+                        'cache_id': cache_id,
+                        'yaml': self.get_yaml(),
+                        'datapackage': pipeline_data['datapackage'],
+                        'resources': pipeline_data['resources'],
+                    }
+                else:
+                    return {
+                        'status_code': 1,
+                        'cache_id': cache_id,
+                        'yaml': self.get_yaml(),
+                        'error_text': status_dict.error_log,
+                    }
+
         finally:
             try:
                 # Clean up the directory, deleting old folders
                 cur_time = time.time()
                 dirs = [
-                    folder_name for folder_name in os.listdir(f'{file_path}/tmp')
+                    folder_name for folder_name in os.listdir(f'{FILE_PATH}/tmp')
                     if not folder_name.startswith('.')
                 ]
                 for folder_name in dirs:
-                    folder = f'{file_path}/tmp/{folder_name}'
+                    folder = f'{FILE_PATH}/tmp/{folder_name}'
                     st = os.stat(folder)
                     modified_time = st.st_mtime
                     age = cur_time - modified_time
 
-                    if age > DAY:
+                    if age > DAY * 30:
                         shutil.rmtree(folder)
             except Exception as e:
                 logger.info(f'There was an error trying to clean up folder: {str(e)}')
