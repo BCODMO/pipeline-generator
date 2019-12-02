@@ -168,6 +168,7 @@ class BcodmoPipeline:
     @staticmethod
     def get_pipeline_status(cache_id, name):
         status = status_mgr(f'{FILE_PATH}/tmp')
+        status.initialize()
         pipeline_status = status.get(f'./{cache_id}/{name}')
         start_time = None
         finish_time = None
@@ -194,6 +195,12 @@ class BcodmoPipeline:
             'success': success,
         }
 
+    @staticmethod
+    def log_slow_compute(start, cache_id, text):
+        elapsed = time.time() - start
+        if elapsed > 0.1:
+            logging.error(f'Slow compute while {text}: {elapsed} - {cache_id}')
+
     def run_pipeline_thread(self, cache_id, verbose):
         cache_dir = f'{ROOT_DIR}/{cache_id}'
         pipeline_spec_path = f'{cache_dir}/pipeline-spec.yaml'
@@ -203,7 +210,9 @@ class BcodmoPipeline:
         os.environ['DPP_PROCESSOR_PATH'] = processor_path
         try:
             # Activate the correct virtual environment
+            start = time.time()
             self._activate_virtualenv(self.version)
+            BcodmoPipeline.log_slow_compute(start, cache_id, 'activating the virtualenv')
 
             # Set the verbose string if necessary
             if verbose:
@@ -212,15 +221,19 @@ class BcodmoPipeline:
                 command_list = [dpp_command_path, 'run', pipeline_id]
 
             # Start the dpp process
+            start = time.time()
             p = subprocess.Popen(
                 command_list,
                 stderr=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 cwd=ROOT_DIR,
             )
+            BcodmoPipeline.log_slow_compute(start, cache_id, 'creating the process')
 
             sleep_timer = 1
+            start = time.time()
             while p.poll() is None:
+                BcodmoPipeline.log_slow_compute(start, cache_id, 'polling the process')
                 time.sleep(1)
                 if sleep_timer != 5:
                     sleep_timer += 1
@@ -238,6 +251,7 @@ class BcodmoPipeline:
 
                     # Invalidate the pipeline in the dpp backend
                     status = status_mgr(ROOT_DIR)
+                    status.initialize()
                     pipeline_status = status.get(pipeline_id)
                     if pipeline_status:
                         last_execution = pipeline_status.last_execution
@@ -252,9 +266,12 @@ class BcodmoPipeline:
                     if p.poll() is None:
                         p.kill()
                         break
+                start = time.time()
         finally:
             # Deactivate the virtualenv - not sure if this is necessary since it is a thread
+            start = time.time()
             self._deactivate_virtualenv()
+            BcodmoPipeline.log_slow_compute(start, cache_id, 'deactivating the virtualenv')
 
         # If the pipeline-spec.yaml file has been deleted since this thread started, the
         # whole cache_id folder should be deleted
@@ -294,9 +311,13 @@ class BcodmoPipeline:
         results_folder = f'{cache_dir}/results'
         # Create the directory and file
         if not os.path.exists(cache_dir):
+            start = time.time()
             os.makedirs(cache_dir)
+            BcodmoPipeline.log_slow_compute(start, cache_id, 'creating the directories')
         try:
+            start = time.time()
             self.save_to_file(f'{cache_dir}/pipeline-spec.yaml.original', steps=self._steps)
+            BcodmoPipeline.log_slow_compute(start, cache_id, 'creating the pipeline-spec.original.yaml file')
             # Create a new save step so we can access the data here
             new_save_step = {
                 'run': 'dump_to_path',
@@ -305,28 +326,42 @@ class BcodmoPipeline:
                 }
             }
             new_steps = self._steps + [new_save_step]
+            start = time.time()
             self.save_to_file(f'{cache_dir}/pipeline-spec.yaml', steps=new_steps)
+            BcodmoPipeline.log_slow_compute(start, cache_id, 'creating the pipeline-spec.yaml file')
 
             # Remove the results folder
+            start = time.time()
             shutil.rmtree(results_folder, ignore_errors=True)
+            BcodmoPipeline.log_slow_compute(start, cache_id, 'removing the results folder')
 
+            start = time.time()
             pipeline_id = f'./{cache_id}/{self.name}'
             status = status_mgr(ROOT_DIR)
+            status.initialize()
             pipeline_status = status.get(pipeline_id)
             last_execution = pipeline_status.last_execution
+            BcodmoPipeline.log_slow_compute(start, cache_id, 'checking the status before creating a thread')
             old_start_time = None
             if last_execution:
                 old_start_time = last_execution.start_time
 
+            start = time.time()
             x = threading.Thread(target=self.run_pipeline_thread, args=(cache_id, verbose,), daemon=True)
+            BcodmoPipeline.log_slow_compute(start, cache_id, 'creating the thread')
+            start = time.time()
             x.start()
+            BcodmoPipeline.log_slow_compute(start, cache_id, 'starting the thread')
 
             if background:
                 while True:
                     # Loop until the next pipeline has started
+                    start = time.time()
                     status = status_mgr(ROOT_DIR)
+                    status.initialize()
                     pipeline_status = status.get(pipeline_id)
                     last_execution = pipeline_status.last_execution
+                    BcodmoPipeline.log_slow_compute(start, cache_id, 'checking the status after creating the thread')
                     if last_execution and last_execution.start_time != old_start_time:
                         break
                     if x.is_alive():
@@ -368,6 +403,7 @@ class BcodmoPipeline:
 
         finally:
             try:
+                start = time.time()
                 # Clean up the directory, deleting old folders
                 cur_time = time.time()
                 dirs = [
@@ -382,6 +418,7 @@ class BcodmoPipeline:
 
                     if age > DAY * 30:
                         shutil.rmtree(folder)
+                BcodmoPipeline.log_slow_compute(start, cache_id, 'checking age status of folders after complete')
             except Exception as e:
                 logger.info(f'There was an error trying to clean up folder: {str(e)}')
                 logger.error(vars(e))
