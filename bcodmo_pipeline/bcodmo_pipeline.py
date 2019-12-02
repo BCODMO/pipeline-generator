@@ -323,6 +323,7 @@ class BcodmoPipeline:
                 'run': 'dump_to_path',
                 'parameters': {
                     'out-path': results_folder,
+                    'temporal_format_property': 'outputFormat',
                 }
             }
             new_steps = self._steps + [new_save_step]
