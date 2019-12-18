@@ -2,4 +2,4 @@ PyYAML==5.1
 psutil==5.6.3
 python-dateutil==2.7.3
 virtualenv==16.7.5
-git+ssh://git@github.com/bcodmo/bcodmo_processors.git@master
+git+ssh://git@github.com/bcodmo/bcodmo_processors.git@v1.0.7
