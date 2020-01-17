@@ -1,3 +1,7 @@
+DEPRECRATED WITH LAMINAR v1.0.8 (https://github.com/BCODMO/laminar-web/releases/tag/v1.0.8)
+
+
+
 # data-pipeline
 Generates a pipeline .yml file
 
