@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 required = [
     'PyYAML==5.1',
     'virtualenv==16.7.5',
-    'psutil==5.6.3',
+    'psutil==5.6.6',
     'bcodmo_processors @ git+https://git@github.com/BCODMO/bcodmo_processors.git@master',
 ]
 
